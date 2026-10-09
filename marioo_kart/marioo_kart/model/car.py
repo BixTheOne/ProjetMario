@@ -17,6 +17,15 @@ class Car:
     def accelerate(self) -> None:
         self.speed += CAR_ACCELERATION
 
+    def brake(self) -> None:
+        self.speed -= CAR_ACCELERATION
+
+    def turn_left(self) -> None:
+        self.angle -= 5
+
+    def turn_right(self) -> None:
+        self.angle += 5
+
     def update_position(self) -> None:
         self.y += self.speed
 
