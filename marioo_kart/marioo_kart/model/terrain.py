@@ -1,5 +1,15 @@
 class Terrain:
+    """Classe hértiage qui représente le revêtement du terrain
+    Args : 
+        name (str): nom du revêtement
+        traction (float): coefficient de traction du revêtement
+        grip (float): coefficient de grip du revêtement
+        friction (float): coefficient de friction du revêtement
+        color (tuple[int, int, int]): couleur du revêtement (R, G, B)
+    """
+
     def __init__(self, name: str, traction: float, grip : float,  friction: float, color : tuple[int, int, int]):
+        """Initialisation des caractéristiques du revêtement"""
         self.name = name
         self.traction = traction
         self.grip = grip
@@ -30,6 +40,9 @@ class Vide(Terrain):
     """Revêtement de type vide, avec une traction et un grip nuls."""
     def __init__(self):
         super().__init__("Vide", traction=0.0, grip=0.0, friction=0.0, color=(15,15, 25))
+
+
+#test des classes de terrain
 
 if __name__ == "__main__":
     road = Road()
