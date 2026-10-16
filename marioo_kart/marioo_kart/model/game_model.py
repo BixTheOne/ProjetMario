@@ -2,7 +2,7 @@ from constants import GameState, GRID_ROWS, GRID_COLS
 from model.car import Car
 from model.circuit import Circuit
 from model.road_tile import RoadTile
-
+from model.terrain import Road, Herbe, Terre, Glace, Vide   
 
 class GameModel:
 
@@ -12,8 +12,22 @@ class GameModel:
         self.car: Car | None = None
 
     def load_circuit(self) -> None:
-        grid = [[RoadTile(col=col_idx, row=row_idx)
-                for row_idx in range(GRID_COLS)] for col_idx in range(GRID_ROWS)]
+        grid = []
+        for row in range(GRID_ROWS):
+            ligne = []
+            for col in range(GRID_COLS):
+                if col < 4:
+                    terrain = Herbe()
+                elif col < 8:
+                    terrain = Terre()
+                elif col < 12:
+                    terrain = Glace()
+                else:
+                    terrain = Road()
+                case = RoadTile(col, row, terrain)
+                ligne.append(case)
+            grid.append(ligne)
+
         self.circuit = Circuit(grid=grid)
         self.spawn_car()
 
