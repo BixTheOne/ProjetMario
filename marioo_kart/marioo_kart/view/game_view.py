@@ -52,3 +52,7 @@ class GameView:
             return
         surf, rect = model.car.get_rotated_sprite()
         self.screen.blit(surf, rect)
+
+        #deuxième voiture
+        surf2, rect2 = model.car2.get_rotated_sprite()
+        self.screen.blit(surf2, rect2)

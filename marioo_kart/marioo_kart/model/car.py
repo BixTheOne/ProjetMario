@@ -3,7 +3,8 @@ import math
 from constants import (
     CAR_ACCELERATION, CAR_WIDTH, CAR_HEIGHT, TILE_SIZE
 )
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
+
 
 @dataclass(frozen=True)
 class CarStats:
@@ -72,3 +73,4 @@ class Car:
 #exemples de voitures avec leurs stats
 SPORTS = CarStats("Sports", (220, 30, 30), acceleration=0.3, max_speed=12.0, brake_power=0.5, turn_speed=4.0)
 TRUCK  = CarStats("Truck",  (40, 90, 200), acceleration=0.1, max_speed=6.0,  brake_power=0.3, turn_speed=2.0)
+SPORTS_BLUE = CarStats("Sports Blue", (30, 30, 220), acceleration=0.3, max_speed=12.0, brake_power=0.5, turn_speed=4.0)
