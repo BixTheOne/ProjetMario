@@ -1,18 +1,44 @@
 from model.road_tile import RoadTile
 from constants import TILE_SIZE
-
+from model.terrain import Vide
 
 class Circuit:
 
     def __init__(self,  grid: list[list[RoadTile]]):
+        """Initialise le circuit et points de passage.
+        Args:
+            grid (list[list[RoadTile]]): Grille des cases du circuit.
+        """
         self.grid = grid
         self.rows = len(grid)
         self.cols = len(grid[0]) if grid else 0
+        self.checkpoints = []
 
     def get_tile(self, col: int, row: int) -> RoadTile | None:
         if 0 <= row < self.rows and 0 <= col < self.cols:
             return self.grid[row][col]
         return None
+
+    def add_checkpoint(self, cases : list[tuple[int, int]], reapparition: tuple[int, int]) -> None:
+
+        """Ajoute un point de passage à la liste des checkpoints.
+        Args:
+            cases (list[tuple[int, int]]): Liste des coordonnées des points de passage.
+            reapparition (tuple[int, int]): Coordonnées de reapparition.
+        Raises:
+            ValueError: si la zone est vide ou si une case est hors du circuit ou de type Vide.
+        """
+
+        if not cases:
+            raise ValueError("Un checkpoint doit contenir des cases.")
+
+        for col, row in cases + [reapparition]:
+            case = self.get_tile(col, row)
+            if case is None or isinstance(case.terrain, Vide):
+                raise ValueError(f"La case ({col}, {row}) n'est pas sur le circuit ou est de type Vide.")
+
+        self.checkpoints.append({"cases": cases, "reapparition": reapparition})
+       
 
     def get_tile_at_pixel(self, px: float, py: float) -> RoadTile | None:
         col = int(px // TILE_SIZE)

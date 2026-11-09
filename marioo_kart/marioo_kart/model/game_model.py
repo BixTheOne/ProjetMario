@@ -3,6 +3,7 @@ from model.car import Car, SPORTS, SPORTS_BLUE
 from model.circuit import Circuit
 from model.road_tile import RoadTile
 from model.terrain import Road, Herbe, Terre, Glace, Vide   
+from model.race_coordinator import RaceCoordinator
 
 class GameModel:
 
@@ -19,6 +20,7 @@ class GameModel:
         self.circuit: Circuit | None = None
         self.car: Car | None = None
         self.car2: Car | None = None
+        self.coordinateur: RaceCoordinator | None = None
         self.terrain_precedent = None  
 
     def load_circuit(self) -> None:
@@ -41,8 +43,22 @@ class GameModel:
             grid.append(ligne)
 
         self.circuit = Circuit(grid=grid)
+        self.circuit.add_checkpoint(cases=[(col, 2) for col in range(4, 12)],reapparition=(7, 2))
+        self.circuit.add_checkpoint(cases=[(col, 5) for col in range(4, 12)],reapparition=(7, 5))
+        self.circuit.add_checkpoint(cases=[(col, 10) for col in range(4, 12)],reapparition=(7, 10))
+
         self.terrain_precedent = None
         self.spawn_car()
+
+        #Création du coordinateur de course
+        self.coordinateur = RaceCoordinator(self.circuit)
+
+        #Enregistrement des 2 voitures 
+
+        self.coordinateur.ajouter_voiture(self.car,7,3)
+        self.coordinateur.ajouter_voiture(self.car2,8,3)
+
+        print(self.coordinateur.progression)  # Affiche l'état initial de la progression des voitures
 
     def spawn_car(self) -> None:
         self.car = Car(SPORTS, 7, 3)
@@ -59,7 +75,23 @@ class GameModel:
         #Mise à jour la position de la voiture en fonction de son état actuel et des entrées du joueur.
         self.car.update_position()
         self.car2.update_position()
-        
+
+        # Vérification des checkpoints pour les deux voitures
+        for voiture in [self.car, self.car2]:
+            case = self.circuit.get_tile_at_pixel(voiture.x, voiture.y)
+
+            if case is None or isinstance(case.terrain, Vide):
+                self.coordinateur.faire_reapparaitre(voiture)
+                print(f"La voiture {voiture} est en dehors du circuit et a été réapparue au dernier checkpoint.")
+                continue  # Passe à la prochaine voiture après réapparition
+
+            if case is not None:
+                if self.coordinateur.verifier_checkpoint(voiture, case.col, case.row):
+                    indice = self.coordinateur.progression[voiture]
+                    print(f"Checkpoint {indice + 1} validé sur la case ({case.col}, {case.row})")
+
+        #Test de la position sur la voiture 1 ainsi que l'affichage des caractéristiques du terrain
+
         case = self.circuit.get_tile_at_pixel(self.car.x, self.car.y)
         if case is not None:
             terrain = case.terrain
