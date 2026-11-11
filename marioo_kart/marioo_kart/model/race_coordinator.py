@@ -29,16 +29,18 @@ class RaceCoordinator:
             row (int): La ligne de la position de départ.
         """
 
-        self.progression[voiture] = -1  # -1 signifie que la voiture n'a pas encore franchi de checkpoint
+        self.progression[voiture] = -1  # -1 => voiture n'a pas encore franchi de checkpoint
         self.depart[voiture] = (col, row)
 
-    def verifier_checkpoint(self, voiture,col, row)-> None:
+    def verifier_checkpoint(self, voiture,col, row)-> bool:
 
         """Vérifie si la voiture a franchi un checkpoint et met à jour sa progression.
         Args:
             voiture (Car): La voiture à vérifier.
             col (int): La colonne de la case à vérifier.
             row (int): La ligne de la case à vérifier.
+        Returns:
+            bool: True si la voiture a franchi un checkpoint, False sinon.
         """
 
         prochain = self.progression[voiture] + 1
@@ -49,6 +51,8 @@ class RaceCoordinator:
             if (col, row) in checkpoint["cases"]:
                 self.progression[voiture] = prochain
                 print(f"Voiture {voiture} a franchi le checkpoint {prochain}.")
+                return True
+        return False
 
 
     def faire_reapparaitre(self, voiture)-> None:
@@ -62,9 +66,11 @@ class RaceCoordinator:
         dernier_checkpoint = self.progression[voiture]
 
         if dernier_checkpoint == -1:
+
             # La voiture n'a pas encore franchi de checkpoint, réapparition au départ
             col, row = self.depart[voiture]
             print("Aucun checkpoint validé : retour au départ")
+
         else:
             # La voiture a franchi un checkpoint, réapparition au dernier checkpoint atteint
             col, row = self.circuit.checkpoints[dernier_checkpoint]["reapparition"]
