@@ -42,14 +42,36 @@ class GameView:
 
     def _draw_racing(self, model: GameModel) -> None:
 
+        """Affiche le circuit, les points de passage et les 2 voitures.
+        Args:
+            model (GameModel): Le modèle du jeu contenant l'état actuel.
+        Returns:
+            None
+        """
+        if model.circuit is None:
+            return
+
+        #Affichage des cases du circuit
         for row_idx, row in enumerate(model.circuit.grid):
             for col_idx, tile in enumerate(row):
                 sprite = tile.get_sprite(TILE_SIZE)
                 self.screen.blit(
                     sprite, (col_idx * TILE_SIZE, row_idx * TILE_SIZE))
 
-        if model.circuit is None:
-            return
+
+        #affichage des checkpoints
+
+        texte = self.font.render("C",True,(255, 255, 255))
+
+        for checkpoint in model.circuit.checkpoints:
+            for col, row in checkpoint["cases"]:
+                x = col * TILE_SIZE + TILE_SIZE // 2
+                y = row * TILE_SIZE + TILE_SIZE // 2
+                rect = texte.get_rect(center=(x, y))
+                self.screen.blit(texte, rect)   
+
+
+        #première voiture
         surf, rect = model.car.get_rotated_sprite()
         self.screen.blit(surf, rect)
 
