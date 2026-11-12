@@ -7,6 +7,9 @@ class RaceCoordinator:
         circuit (Circuit): Le circuit sur lequel la course se déroule.
         progression (dict): Dictionnaire qui stocke le dernier checkpoint atteint par chaque voiture.
         depart (dict): Dictionnaire qui stocke les positions de départ par chaque voiture.
+        tours (dict): Dictionnaire qui stocke le nombre de tours complétés par chaque voiture.
+        nb_tours (int): Le nombre de tours requis pour terminer la course.
+        vainqueur (Car | None): La voiture qui a terminé la course en premier.
     """
 
     def __init__(self, circuit):
@@ -18,7 +21,11 @@ class RaceCoordinator:
         
         self.circuit = circuit
         self.progression = {}
-        self.depart = {}  # Dictionnaire pour stocker les positions de départ des voitures
+        self.depart = {}  
+        self.tours={}
+        self.nb_tours=3
+        self.vainqueur=None
+
 
     def ajouter_voiture(self,voiture, col, row)-> None:
 
@@ -31,6 +38,7 @@ class RaceCoordinator:
 
         self.progression[voiture] = -1  # -1 => voiture n'a pas encore franchi de checkpoint
         self.depart[voiture] = (col, row)
+        self.tours[voiture]=0
 
     def verifier_checkpoint(self, voiture,col, row)-> bool:
 
@@ -84,3 +92,45 @@ class RaceCoordinator:
 
         print(f"Réapparition sur la case : ({col}, {row})")
         print(f"Position en pixels : ({voiture.x}, {voiture.y})")
+
+
+    def verifier_arrivee(self,voiture,col,row)-> bool:
+
+        """Vérifie si une voiture a terminé un tour.
+        Un tour est validé si la voiture a franchi la ligne d'arrivée après avoir franchi tous les checkpoints dans l'ordre.
+        Args:
+            voiture (Car): La voiture à vérifier.
+            col (int): La colonne de la case à vérifier.
+            row (int): La ligne de la case à vérifier.
+        Returns:
+            bool: True si un tour est validé, False sinon.
+        """
+
+        if self.vainqueur is not None:
+            return False  #course déjà terminée
+
+        if(col,row) not in self.circuit.arrivee:
+            return False  #voiture n'est pas sur la ligne d'arrivée
+
+        dernier = len(self.circuit.checkpoints) - 1
+
+        if self.progression[voiture] != dernier:
+            return False  #voiture n'a pas franchi tous les checkpoints
+
+        #alors validation tour
+
+        self.tours[voiture]+=1
+        self.progression[voiture]=-1 #réinitialisation progression pour prochain tour
+
+        print(f"Tour validé pour la voiture {voiture}. Tours complétés : {self.tours[voiture]}")
+
+        #vérfication victoire 
+        if self.tours[voiture]>=self.nb_tours:
+            
+            self.vainqueur=voiture
+            print(f"La voiture {voiture} a gagné la course !")
+
+        return True
+
+
+        

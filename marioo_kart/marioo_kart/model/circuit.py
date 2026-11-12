@@ -4,6 +4,16 @@ from model.terrain import Vide
 
 class Circuit:
 
+    """
+    Classe représentant le circuit de course.
+    Attributes:
+        grid (list[list[RoadTile]]): Grille des cases du circuit.
+        rows (int): Nombre de lignes dans la grille.
+        cols (int): Nombre de colonnes dans la grille.
+        checkpoints (list[dict]): Liste des points de passage, chaque point de passage est un dictionnaire contenant les cases et la position de réapparition.
+        boosts (list[tuple[int, int]]): Liste des positions des boosts sur le circuit.
+    """
+
     def __init__(self,  grid: list[list[RoadTile]]):
         """Initialise le circuit et points de passage.
         Args:
@@ -13,6 +23,8 @@ class Circuit:
         self.rows = len(grid)
         self.cols = len(grid[0]) if grid else 0
         self.checkpoints = []
+        self.boosts = []
+        self.arrivee = []
 
     def get_tile(self, col: int, row: int) -> RoadTile | None:
         if 0 <= row < self.rows and 0 <= col < self.cols:
@@ -50,3 +62,23 @@ class Circuit:
 
     def pixel_height(self) -> int:
         return self.rows * TILE_SIZE
+
+    def add_boost(self, col: int, row: int) -> None:
+        """Ajoute une case de boost au circuit.
+        Args:
+            col (int): Colonne de la case de boost.
+            row (int): Ligne de la case de boost.
+        Returns:
+            None
+        """
+        self.boosts.append((col, row))
+
+    def add_arrivee(self, col: int, row: int) -> None:
+        """Ajoute une case d'arrivée au circuit.
+        Args:
+            col (int): Colonne de la case d'arrivée.
+            row (int): Ligne de la case d'arrivée.
+        Returns:
+            None
+        """
+        self.arrivee.append((col, row))
