@@ -1,3 +1,5 @@
+from unittest import case
+
 from constants import GameState, GRID_ROWS, GRID_COLS
 from model.car import Car, SPORTS, SPORTS_BLUE, TRUCK
 from model.circuit import Circuit
@@ -25,30 +27,61 @@ class GameModel:
         self.terrain_precedent = None  
 
     def load_circuit(self) -> None:
+        """Crée le circuit, les checkpoints et les deux voitures.
+
+        Returns:
+            None
+        """
+
+        # R = Route, H = Herbe, T = Terre, G = Glace, V = Vide
+        
+        plan = [
+        "TTTTTTTTTTTTGGGG",
+        "TTTTTTTTTTTTGGGG",
+        "TTTTTTTTTTTTVGHH",
+        "TTTTTTTTTTTTVGHH",
+        "TTVVVVVTTTTTVVHH",
+        "TTTTTTVTTTTTVVHH",
+        "TTTTTTVTTTTTVVHH",
+        "RTTTTTVTTTTTVVHH",
+        "RRTTTTVVVVVVVVHH",
+        "RRRTTTTTTTTTTHHH",
+        "RRRRRRRRHHHHHHHH",
+        "RRRRRRRRHHHHHHHH"
+    ]
+        terrains = {"R": Road,"H": Herbe,"T": Terre,"G": Glace,"V": Vide}
+
         grid = []
+
         for row in range(GRID_ROWS):
             ligne = []
             for col in range(GRID_COLS):
-                if row < 2:
-                    terrain = Herbe()
-                elif row < 4:
-                    terrain = Terre()
-                elif row < 7:
-                    terrain = Glace()
-                elif row < 10:
-                    terrain = Road()
-                else:
-                    terrain = Road()
+                lettre = plan[row][col]
+                terrain = terrains[lettre]()
                 case = RoadTile(col, row, terrain)
                 ligne.append(case)
             grid.append(ligne)
 
         self.circuit = Circuit(grid=grid)
-        self.circuit.add_checkpoint(cases=[(col, 2) for col in range(4, 12)],reapparition=(7, 2))
-        self.circuit.add_checkpoint(cases=[(col, 5) for col in range(4, 12)],reapparition=(7, 5))
-        self.circuit.add_checkpoint(cases=[(col, 10) for col in range(4, 12)],reapparition=(7, 10))
+
+        #Création des checkpoints avec leurs cases et leurs positions de réapparition
+        self.circuit.add_checkpoint(cases=[(col, 9) for col in range(13, 16)],reapparition=(14,9))
+        self.circuit.add_checkpoint(cases=[(col, 1) for col in range(12, 16)],reapparition=(13, 1))
+        self.circuit.add_checkpoint(cases=[(col, 3) for col in range(0, 12)],reapparition=(7, 3))
+
+        #Placement des boosts
+        self.circuit.add_boost(13, 1)
+        self.circuit.add_boost(14, 1)
+        self.circuit.add_boost(13, 2)
+        self.circuit.add_boost(14, 2)
+
+        #Placement de la ligne d'arrivée
+        self.circuit.add_arrivee(8, 10)
+        self.circuit.add_arrivee(8, 11)
 
         self.terrain_precedent = None
+
+        #création voiture
         self.spawn_car()
 
         #Création du coordinateur de course
@@ -56,8 +89,11 @@ class GameModel:
 
         #Enregistrement des 2 voitures 
 
-        self.coordinateur.ajouter_voiture(self.car,7,3)
-        self.coordinateur.ajouter_voiture(self.car2,8,3)
+        self.coordinateur.ajouter_voiture(self.car,1,11)
+        self.coordinateur.ajouter_voiture(self.car2,2,11)
+
+        #Mémorise si chaque voiture est déjà sur un boost
+        self.sur_boost = {self.car: False,self.car2: False}
 
         print(self.coordinateur.progression)  # Affiche l'état initial de la progression des voitures
 
@@ -83,8 +119,9 @@ class GameModel:
 
 
             if case is None or isinstance(case.terrain, Vide):
+                self.sur_boost[voiture] = False
                 self.coordinateur.faire_reapparaitre(voiture)
-                print(f"La voiture {voiture} est en dehors du circuit et a été réapparue au dernier checkpoint.")
+                print(f"La voiture {voiture} est en dehors du circuit et a été réapparue au dernier checkpoint.")                
                 continue  # Passe à la prochaine voiture après réapparition
 
             if case is not None:
@@ -99,6 +136,18 @@ class GameModel:
             if voiture.drifting != derapait_avant:
                 etat = "DÉRAPE" if voiture.drifting else "adhère"
                 print(f"{voiture.stats.name} {etat} sur {case.terrain.name}")
+                # Vérification du passage sur la ligne d'arrivée
+                if self.coordinateur.verifier_arrivee(voiture, case.col, case.row):
+                    print(f"Tour terminé : {self.coordinateur.tours[voiture]}/3")
+                
+                # Vérification du passage sur un boost
+                est_sur_boost = (case.col, case.row) in self.circuit.boosts
+            
+                if est_sur_boost and not self.sur_boost[voiture]:
+                    voiture.speed = min(voiture.speed + 3, voiture.stats.max_speed)
+                    print(f"Boost activé ! Vitesse : {voiture.speed}")
+            
+                self.sur_boost[voiture] = est_sur_boost
 
         #Test de la position sur la voiture 1 ainsi que l'affichage des caractéristiques du terrain
 
@@ -112,3 +161,5 @@ class GameModel:
             if self.terrain_precedent != "Vide":
                 print("La voiture est en dehors du circuit.")                
                 self.terrain_precedent = "Vide"
+
+        

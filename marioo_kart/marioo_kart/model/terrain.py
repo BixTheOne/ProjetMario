@@ -24,7 +24,7 @@ class Road(Terrain):
 class Herbe(Terrain):
     """Revêtement de type herbe, avec une traction et un grip plus faible que la route."""
     def __init__(self):
-        super().__init__("Grass", traction=0.6, grip=0.4, friction=0.5, color=(50, 160, 50))
+        super().__init__("Herbe", traction=0.6, grip=0.4, friction=0.5, color=(50, 160, 50))
 
 class Terre(Terrain):
     """Revêtement de type terre, avec une traction et un grip plus faible que l'herbe."""
