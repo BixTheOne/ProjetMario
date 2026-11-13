@@ -109,8 +109,8 @@ class RaceCoordinator:
             bool: True si un tour est validé, False sinon.
         """
 
-        if self.vainqueur is not None:
-            return False  #course déjà terminée
+        if self.tours[voiture] >= self.nb_tours:
+            return False #  # La voiture a déjà terminé la course
 
         if(col,row) not in self.circuit.arrivee:
             return False  #voiture n'est pas sur la ligne d'arrivée
@@ -129,9 +129,11 @@ class RaceCoordinator:
 
         #vérfication victoire 
         if self.tours[voiture]>=self.nb_tours:
-            
-            self.vainqueur=voiture
-            print(f"La voiture {voiture} a gagné la course !")
+            if self.vainqueur is None:
+                self.vainqueur=voiture
+                print(f"La voiture {voiture} a gagné la course !")
+            else:
+                print(f"La voiture {voiture} a terminé ses 3 tours !")
 
         return True
 
