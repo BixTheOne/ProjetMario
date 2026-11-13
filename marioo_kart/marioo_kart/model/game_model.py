@@ -1,5 +1,5 @@
 from constants import GameState, GRID_ROWS, GRID_COLS
-from model.car import Car, SPORTS, SPORTS_BLUE
+from model.car import Car, SPORTS, SPORTS_BLUE, TRUCK
 from model.circuit import Circuit
 from model.road_tile import RoadTile
 from model.terrain import Road, Herbe, Terre, Glace, Vide   
@@ -12,6 +12,7 @@ class GameModel:
         state (GameState): L'état actuel du jeu (MENU, RACING, etc.).
         circuit (Circuit | None): Le circuit actuel du jeu.
         car (Car | None): La voiture du joueur.
+        car2 (Car | None): La deuxième voiture du joueur.
         terrain_precedent (str|None): Nom du dernier revêtement de la voiture.
         """
 
@@ -35,7 +36,7 @@ class GameModel:
                 elif row < 7:
                     terrain = Glace()
                 elif row < 10:
-                    terrain = Vide()
+                    terrain = Road()
                 else:
                     terrain = Road()
                 case = RoadTile(col, row, terrain)
@@ -62,7 +63,7 @@ class GameModel:
 
     def spawn_car(self) -> None:
         self.car = Car(SPORTS, 7, 3)
-        self.car2 = Car(SPORTS_BLUE, 8, 3)
+        self.car2 = Car(TRUCK, 8, 3)
 
     def update(self) -> None:
         """Met à jour l'état du jeu, y compris la position de la voiture et les interactions avec le circuit.
@@ -72,13 +73,14 @@ class GameModel:
             Returns: None"""
         if self.state != GameState.RACING or self.circuit is None:
             return
-        #Mise à jour la position de la voiture en fonction de son état actuel et des entrées du joueur.
-        self.car.update_position()
-        self.car2.update_position()
+
+        
 
         # Vérification des checkpoints pour les deux voitures
         for voiture in [self.car, self.car2]:
             case = self.circuit.get_tile_at_pixel(voiture.x, voiture.y)
+
+
 
             if case is None or isinstance(case.terrain, Vide):
                 self.coordinateur.faire_reapparaitre(voiture)
@@ -89,6 +91,14 @@ class GameModel:
                 if self.coordinateur.verifier_checkpoint(voiture, case.col, case.row):
                     indice = self.coordinateur.progression[voiture]
                     print(f"Checkpoint {indice + 1} validé sur la case ({case.col}, {case.row})")
+
+
+            # Physique de la voiture sur ce terrain
+            derapait_avant = voiture.drifting
+            voiture.update_position(case.terrain)
+            if voiture.drifting != derapait_avant:
+                etat = "DÉRAPE" if voiture.drifting else "adhère"
+                print(f"{voiture.stats.name} {etat} sur {case.terrain.name}")
 
         #Test de la position sur la voiture 1 ainsi que l'affichage des caractéristiques du terrain
 

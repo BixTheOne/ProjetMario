@@ -75,6 +75,9 @@ class RaceCoordinator:
         voiture.speed = 0.0
         voiture.vx = 0.0
         voiture.vy = 0.0
+        voiture.accelerated = 0.0
+        voiture.steering = 0.0
+        voiture.drifting = False
 
         print(f"Réapparition sur la case : ({col}, {row})")
         print(f"Position en pixels : ({voiture.x}, {voiture.y})")
