@@ -98,8 +98,8 @@ class GameModel:
         print(self.coordinateur.progression)  # Affiche l'état initial de la progression des voitures
 
     def spawn_car(self) -> None:
-        self.car = Car(SPORTS, 7, 3)
-        self.car2 = Car(TRUCK, 8, 3)
+        self.car = Car(SPORTS, 1, 11)
+        self.car2 = Car(TRUCK, 2, 11)
 
     def update(self) -> None:
         """Met à jour l'état du jeu, y compris la position de la voiture et les interactions avec le circuit.
@@ -110,56 +110,60 @@ class GameModel:
         if self.state != GameState.RACING or self.circuit is None:
             return
 
-        
-
-        # Vérification des checkpoints pour les deux voitures
         for voiture in [self.car, self.car2]:
+
+            # Terrain avant déplacement : utilisé pour la physique
             case = self.circuit.get_tile_at_pixel(voiture.x, voiture.y)
-
-
 
             if case is None or isinstance(case.terrain, Vide):
                 self.sur_boost[voiture] = False
                 self.coordinateur.faire_reapparaitre(voiture)
-                print(f"La voiture {voiture} est en dehors du circuit et a été réapparue au dernier checkpoint.")                
-                continue  # Passe à la prochaine voiture après réapparition
+                continue
 
-            if case is not None:
-                if self.coordinateur.verifier_checkpoint(voiture, case.col, case.row):
-                    indice = self.coordinateur.progression[voiture]
-                    print(f"Checkpoint {indice + 1} validé sur la case ({case.col}, {case.row})")
-
-
-            # Physique de la voiture sur ce terrain
+            # Déplacement avec la physique développée par l'équipe
             derapait_avant = voiture.drifting
             voiture.update_position(case.terrain)
+
             if voiture.drifting != derapait_avant:
                 etat = "DÉRAPE" if voiture.drifting else "adhère"
                 print(f"{voiture.stats.name} {etat} sur {case.terrain.name}")
-                # Vérification du passage sur la ligne d'arrivée
-                if self.coordinateur.verifier_arrivee(voiture, case.col, case.row):
-                    print(f"Tour terminé : {self.coordinateur.tours[voiture]}/3")
-                
-                # Vérification du passage sur un boost
-                est_sur_boost = (case.col, case.row) in self.circuit.boosts
-            
-                if est_sur_boost and not self.sur_boost[voiture]:
-                    voiture.speed = min(voiture.speed + 3, voiture.stats.max_speed)
-                    print(f"Boost activé ! Vitesse : {voiture.speed}")
-            
-                self.sur_boost[voiture] = est_sur_boost
 
-        #Test de la position sur la voiture 1 ainsi que l'affichage des caractéristiques du terrain
+            # Nouvelle position après déplacement
+            case = self.circuit.get_tile_at_pixel(voiture.x, voiture.y)
 
+            if case is None or isinstance(case.terrain, Vide):
+                self.sur_boost[voiture] = False
+                self.coordinateur.faire_reapparaitre(voiture)
+                continue
+
+            # Checkpoints
+            if self.coordinateur.verifier_checkpoint(voiture, case.col, case.row):
+                indice = self.coordinateur.progression[voiture]
+                print(f"Checkpoint {indice + 1} validé sur la case ({case.col}, {case.row})")
+
+            # Ligne d'arrivée
+            if self.coordinateur.verifier_arrivee(voiture, case.col, case.row):
+                print(f"Tour terminé : {self.coordinateur.tours[voiture]}/3")
+
+            # Boosts
+            est_sur_boost = (case.col, case.row) in self.circuit.boosts
+
+            if est_sur_boost and not self.sur_boost[voiture]:
+                voiture.speed = min(voiture.speed + 3, voiture.stats.max_speed)
+                print(f"Boost activé ! Vitesse : {voiture.speed}")
+
+            self.sur_boost[voiture] = est_sur_boost
+
+        # Affichage des changements de terrain du joueur 1
         case = self.circuit.get_tile_at_pixel(self.car.x, self.car.y)
+
         if case is not None:
             terrain = case.terrain
+
             if terrain.name != self.terrain_precedent:
                 print(f"Terrain: {terrain.name}, Traction: {terrain.traction}, Grip: {terrain.grip}, Friction: {terrain.friction}")
                 self.terrain_precedent = terrain.name
-        else:
-            if self.terrain_precedent != "Vide":
-                print("La voiture est en dehors du circuit.")                
-                self.terrain_precedent = "Vide"
+
+        
 
         

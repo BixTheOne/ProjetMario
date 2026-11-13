@@ -1,5 +1,5 @@
 class Terrain:
-    """Classe hértiage qui représente le revêtement du terrain
+    """Classe héritage qui représente le revêtement du terrain
     Args : 
         name (str): nom du revêtement
         traction (float): coefficient de traction du revêtement
