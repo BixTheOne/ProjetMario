@@ -28,16 +28,16 @@ class GameView:
             "Jeu de course 2D", True, COLOR_ACCENT)
         self.screen.blit(title_surf, title_surf.get_rect(center=(cx, 160)))
 
-        options = [("JOUER (Enter)", GameState.RACING),
-                   ("QUITTER (Escape)", None)]
-        for i, (label, _) in enumerate(options):
+        for i, label in enumerate(model.menu_options):
+            selectionne = (i == model.menu_selection)
             y = 320 + i * 80
             rect = pygame.Rect(cx - 140, y - 25, 280, 50)
             pygame.draw.rect(self.screen, COLOR_PANEL, rect, border_radius=8)
-            pygame.draw.rect(self.screen, COLOR_PANEL_BORDER,
+            pygame.draw.rect(self.screen,
+                             COLOR_ACCENT if selectionne else COLOR_PANEL_BORDER,
                              rect, 2, border_radius=8)
             text_surf = self.font.render(
-                label, True, COLOR_ACCENT if i == 0 else COLOR_TEXT)
+                label, True, COLOR_ACCENT if selectionne else COLOR_TEXT)
             self.screen.blit(text_surf, text_surf.get_rect(center=rect.center))
 
     def _draw_racing(self, model: GameModel) -> None:

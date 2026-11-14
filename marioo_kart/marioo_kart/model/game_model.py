@@ -24,7 +24,9 @@ class GameModel:
         self.car: Car | None = None
         self.car2: Car | None = None
         self.coordinateur: RaceCoordinator | None = None
-        self.terrain_precedent = None  
+        self.terrain_precedent = None
+        self.menu_options = ["JOUER", "QUITTER"]
+        self.menu_selection = 0  # index du bouton sélectionné dans le menu
 
     def load_circuit(self) -> None:
         """Crée le circuit, les checkpoints et les deux voitures.

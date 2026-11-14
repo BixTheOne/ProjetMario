@@ -42,9 +42,19 @@ class GameController:
             self.handle_menu_key(key)
 
     def handle_menu_key(self, key: int) -> None:
-        if key == pygame.K_RETURN:
-            self.model.load_circuit()
-            self.model.state = GameState.RACING
+        nb_options = len(self.model.menu_options)
+
+        if key == pygame.K_UP:
+            self.model.menu_selection = (self.model.menu_selection - 1) % nb_options
+        elif key == pygame.K_DOWN:
+            self.model.menu_selection = (self.model.menu_selection + 1) % nb_options
+        elif key == pygame.K_RETURN:
+            choix = self.model.menu_options[self.model.menu_selection]
+            if choix == "JOUER":
+                self.model.load_circuit()
+                self.model.state = GameState.RACING
+            elif choix == "QUITTER":
+                self.quit()
         elif key == pygame.K_ESCAPE:
             self.quit()
 
