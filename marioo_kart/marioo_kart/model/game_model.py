@@ -1,6 +1,7 @@
 from unittest import case
 
-from constants import GameState, GRID_ROWS, GRID_COLS
+from constants import GameState, GRID_ROWS, GRID_COLS, COLLISION_REBOND
+from model.collision import CollisionManager
 from model.car import Car, SPORTS, SPORTS_BLUE, TRUCK
 from model.circuit import Circuit
 from model.road_tile import RoadTile
@@ -25,6 +26,7 @@ class GameModel:
         self.car2: Car | None = None
         self.coordinateur: RaceCoordinator | None = None
         self.terrain_precedent = None
+        self.collisions = CollisionManager(COLLISION_REBOND)
         self.menu_options = ["JOUER", "QUITTER"]
         self.menu_selection = 0  # index du bouton sélectionné dans le menu
 
@@ -155,6 +157,16 @@ class GameModel:
                 print(f"Boost activé ! Vitesse : {voiture.speed}")
 
             self.sur_boost[voiture] = est_sur_boost
+
+        # Collisions entre voitures et détection d'aspiration
+        voitures = [self.car, self.car2]
+        self.collisions.gerer_collisions(voitures)
+        aspiration_avant = {v: v.en_aspiration for v in voitures}
+        self.collisions.detecter_aspiration(voitures)
+        for v in voitures:
+            if v.en_aspiration != aspiration_avant[v]:
+                etat = "entre en" if v.en_aspiration else "sort de"
+                print(f"{v.stats.name} {etat} aspiration")
 
         # Affichage des changements de terrain du joueur 1
         case = self.circuit.get_tile_at_pixel(self.car.x, self.car.y)

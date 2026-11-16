@@ -1,8 +1,10 @@
 import pygame
 import math
 from constants import (
-    CAR_ACCELERATION, CAR_WIDTH, CAR_HEIGHT, TILE_SIZE
+    CAR_ACCELERATION, CAR_WIDTH, CAR_HEIGHT, TILE_SIZE,
+    ASPIRATION_LONGUEUR, ASPIRATION_LARGEUR
 )
+from model.hitbox import Hitbox
 from dataclasses import dataclass, replace
 
 
@@ -38,7 +40,13 @@ class Car:
         self.vy: float = 0.0
         self.x = start_col * TILE_SIZE + TILE_SIZE // 2
         self.y = start_row * TILE_SIZE + TILE_SIZE // 2
-        
+
+        # Hitboxes : collision entre voitures et zone d'aspiration derrière la voiture
+        self.hitbox = Hitbox(CAR_HEIGHT, CAR_WIDTH)
+        self.zone_aspiration = Hitbox(ASPIRATION_LONGUEUR, ASPIRATION_LARGEUR,
+                                      decalage=-(CAR_HEIGHT + ASPIRATION_LONGUEUR) / 2)
+        self.en_aspiration: bool = False   # True si la voiture suit une autre de près
+
         self.sprite = self.build_sprite()
 
     def accelerate(self) -> None:

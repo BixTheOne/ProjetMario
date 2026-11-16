@@ -2,7 +2,7 @@ import pygame
 from constants import (
     WINDOW_WIDTH, WINDOW_HEIGHT, TILE_SIZE,
     COLOR_BG, COLOR_TEXT, COLOR_ACCENT, COLOR_PANEL, COLOR_PANEL_BORDER,
-    GameState
+    GameState, DEBUG_HITBOXES
 )
 from model.game_model import GameModel
 
@@ -96,6 +96,17 @@ class GameView:
         #deuxième voiture
         surf2, rect2 = model.car2.get_rotated_sprite()
         self.screen.blit(surf2, rect2)
+
+        #affichage debug des zones d'aspiration
+        if DEBUG_HITBOXES:
+            for voiture in [model.car, model.car2]:
+                zone = voiture.zone_aspiration
+                occupee = any(
+                    autre is not voiture and zone.touche(voiture, autre.hitbox, autre)
+                    for autre in [model.car, model.car2]
+                )
+                couleur = (0, 255, 0) if occupee else (0, 120, 255)
+                pygame.draw.polygon(self.screen, couleur, zone.coins(voiture), 1)
 
         #affichage nb de tours
 
