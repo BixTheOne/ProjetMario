@@ -74,10 +74,10 @@ class GameModel:
         self.circuit.add_checkpoint(cases=[(col, 3) for col in range(0, 12)],reapparition=(7, 3))
 
         #Placement des boosts
-        self.circuit.add_boost(13, 1)
-        self.circuit.add_boost(14, 1)
-        self.circuit.add_boost(13, 2)
-        self.circuit.add_boost(14, 2)
+        self.circuit.add_boost(7, 2)
+        self.circuit.add_boost(8, 2)
+        self.circuit.add_boost(9, 2)
+        self.circuit.add_boost(10, 2)
 
         #Placement de la ligne d'arrivée
         self.circuit.add_arrivee(8, 10)

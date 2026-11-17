@@ -131,6 +131,16 @@ class GameView:
         self.screen.blit(texte_j1, (10, 10))
         self.screen.blit(texte_j2, (10, 40))
 
+        #affichage sens circulation
+
+        for row in [10,11]:
+            texte_sens = self.font.render("->->->", True, (255, 255, 255))
+            x = 6 * TILE_SIZE + TILE_SIZE // 2
+            y = row * TILE_SIZE + TILE_SIZE // 2
+            rect = texte_sens.get_rect(center=(x, y))
+            self.screen.blit(texte_sens, rect)
+
+
         #affichage du vainqueur
 
         vainqueur = model.coordinateur.vainqueur
