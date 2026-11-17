@@ -81,13 +81,23 @@ class GameView:
 
         #affichage de la ligne d'arrivée
 
-        texte_arrivee = self.font.render("F",True,(255, 255, 255))
+        texte_arrivee = self.font.render("L",True,(255, 255, 255))
 
         for col, row in model.circuit.arrivee:
             x = col * TILE_SIZE + TILE_SIZE // 2
             y = row * TILE_SIZE + TILE_SIZE // 2
             rect = texte_arrivee.get_rect(center=(x, y))
             self.screen.blit(texte_arrivee, rect)
+
+        #affichage des positions de départ
+
+        for joueur, (col, row) in model.circuit.departs.items():
+            x = col * TILE_SIZE + TILE_SIZE // 2
+            y = row * TILE_SIZE + TILE_SIZE // 2
+
+            texte = self.font.render(str(joueur),True,(255, 255, 255))
+            rect = texte.get_rect(center=(x, y))
+            self.screen.blit(texte, rect)
 
         #première voiture
         surf, rect = model.car.get_rotated_sprite()

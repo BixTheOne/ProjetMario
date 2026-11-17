@@ -83,6 +83,10 @@ class GameModel:
         self.circuit.add_arrivee(8, 10)
         self.circuit.add_arrivee(8, 11)
 
+        #Placement des positions de départ pour les deux joueurs
+        self.circuit.add_depart(1,7, 10)
+        self.circuit.add_depart(2,7, 11)
+
         self.terrain_precedent = None
 
         #création voiture
@@ -92,9 +96,11 @@ class GameModel:
         self.coordinateur = RaceCoordinator(self.circuit)
 
         #Enregistrement des 2 voitures 
+        col1,row1 = self.circuit.departs[1]
+        col2,row2 = self.circuit.departs[2]
 
-        self.coordinateur.ajouter_voiture(self.car,1,11)
-        self.coordinateur.ajouter_voiture(self.car2,2,11)
+        self.coordinateur.ajouter_voiture(self.car,col1,row1)
+        self.coordinateur.ajouter_voiture(self.car2,col2,row2)
 
         #Mémorise si chaque voiture est déjà sur un boost
         self.sur_boost = {self.car: False,self.car2: False}
@@ -102,8 +108,14 @@ class GameModel:
         print(self.coordinateur.progression)  # Affiche l'état initial de la progression des voitures
 
     def spawn_car(self) -> None:
-        self.car = Car(SPORTS, 1, 11)
-        self.car2 = Car(TRUCK, 2, 11)
+
+        """Crée les deux voitures du jeu avec leurs caractéristiques respectives."""
+
+        col1,row1 = self.circuit.departs[1]
+        col2,row2 = self.circuit.departs[2]
+
+        self.car = Car(SPORTS,col1,row1)
+        self.car2 = Car(TRUCK,col2,row2)
 
     def update(self) -> None:
         """Met à jour l'état du jeu, y compris la position de la voiture et les interactions avec le circuit.

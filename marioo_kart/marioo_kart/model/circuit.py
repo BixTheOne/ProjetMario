@@ -12,6 +12,8 @@ class Circuit:
         cols (int): Nombre de colonnes dans la grille.
         checkpoints (list[dict]): Liste des points de passage, chaque point de passage est un dictionnaire contenant les cases et la position de réapparition.
         boosts (list[tuple[int, int]]): Liste des positions des boosts sur le circuit.
+        arrivee (list[tuple[int, int]]): Liste des positions de la ligne d'arrivée sur le circuit.
+        departs (dict[int, tuple[int, int]]): Positions de départ des joueurs.
     """
 
     def __init__(self,  grid: list[list[RoadTile]]):
@@ -25,6 +27,7 @@ class Circuit:
         self.checkpoints = []
         self.boosts = []
         self.arrivee = []
+        self.departs = {}
 
     def get_tile(self, col: int, row: int) -> RoadTile | None:
         if 0 <= row < self.rows and 0 <= col < self.cols:
@@ -82,3 +85,20 @@ class Circuit:
             None
         """
         self.arrivee.append((col, row))
+
+    def add_depart(self, joueur: int, col: int, row: int) -> None:
+        """Ajoute une case de départ pour un joueur
+        Args:
+            joueur (int): Numéro du joueur.
+            col (int): Colonne de la case de départ.
+            row (int): Ligne de la case de départ.
+        Raises:
+            ValueError: si la case est hors du circuit ou de type Vide.
+        """
+
+        case = self.get_tile(col, row)
+        if case is None or isinstance(case.terrain, Vide):
+            raise ValueError(f"La case ({col}, {row}) n'est pas sur le circuit ou est de type Vide.")
+        self.departs[joueur] = (col, row)
+
+        
