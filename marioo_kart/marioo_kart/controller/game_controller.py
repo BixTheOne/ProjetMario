@@ -40,6 +40,10 @@ class GameController:
 
         if state == GameState.MENU:
             self.handle_menu_key(key)
+        elif state == GameState.CAR_SELECT:
+            self.handle_car_select_key(key)
+        elif state == GameState.TRACK_SELECT:
+            self.handle_track_select_key(key)
 
     def handle_menu_key(self, key: int) -> None:
         nb_options = len(self.model.menu_options)
@@ -50,11 +54,11 @@ class GameController:
             self.model.menu_selection = (self.model.menu_selection + 1) % nb_options
         elif key == pygame.K_RETURN:
             choix = self.model.menu_options[self.model.menu_selection]
-            if choix == "JOUER":
-                self.model.load_circuit()
-                self.model.state = GameState.RACING
-            elif choix == "QUITTER":
-                self.quit()
+        if choix == "JOUER":
+            self.model.reset_selection()
+            self.model.state = GameState.CAR_SELECT
+        elif choix == "QUITTER":
+            self.quit()
         elif key == pygame.K_ESCAPE:
             self.quit()
 
@@ -82,3 +86,41 @@ class GameController:
         self.running = False
         pygame.quit()
         sys.exit()
+
+    def handle_car_select_key(self, key: int) -> None:
+        m = self.model
+        # Joueur 1 : flèches gauche/droite pour choisir, Entrée pour valider
+        if key == pygame.K_LEFT:
+            m.changer_voiture(1, -1)
+        elif key == pygame.K_RIGHT:
+            m.changer_voiture(1, 1)
+        elif key == pygame.K_RETURN:
+            m.valider_voiture(1)
+        # Joueur 2 : Q/D pour choisir, Espace pour valider
+        elif key == pygame.K_q:
+            m.changer_voiture(2, -1)
+        elif key == pygame.K_d:
+            m.changer_voiture(2, 1)
+        elif key == pygame.K_SPACE:
+            m.valider_voiture(2)
+        # Retour au menu
+        elif key == pygame.K_ESCAPE:
+            m.state = GameState.MENU
+            return
+
+        if m.tous_prets():
+            m.state = GameState.TRACK_SELECT
+
+
+    def handle_track_select_key(self, key: int) -> None:
+        m = self.model
+        if key in (pygame.K_LEFT, pygame.K_q):
+            m.changer_circuit(-1)
+        elif key in (pygame.K_RIGHT, pygame.K_d):
+            m.changer_circuit(1)
+        elif key == pygame.K_RETURN:
+            m.load_circuit()
+            m.state = GameState.RACING
+        elif key == pygame.K_ESCAPE:
+            m.reset_selection()
+            m.state = GameState.CAR_SELECT

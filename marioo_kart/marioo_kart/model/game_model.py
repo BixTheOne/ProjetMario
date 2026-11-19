@@ -2,11 +2,14 @@ from unittest import case
 
 from constants import GameState, GRID_ROWS, GRID_COLS, COLLISION_REBOND
 from model.collision import CollisionManager
-from model.car import Car, SPORTS, SPORTS_BLUE, TRUCK
+from model.car import Car, CARS
 from model.circuit import Circuit
 from model.road_tile import RoadTile
 from model.terrain import Road, Herbe, Terre, Glace, Vide   
 from model.race_coordinator import RaceCoordinator
+from model.circuit_data import CIRCUITS
+
+
 
 class GameModel:
 
@@ -30,92 +33,68 @@ class GameModel:
         self.menu_options = ["JOUER", "QUITTER"]
         self.menu_selection = 0  # index du bouton sélectionné dans le menu
 
+        #choix de la voiture et du circuit
+        self.choix_voiture = {1: 0, 2: 1}         # indice dans CARS pour chaque joueur
+        self.joueur_pret = {1: False, 2: False}   # True quand le joueur a validé
+        self.choix_circuit = 0         
+                    # indice dans CIRCUITS
     def load_circuit(self) -> None:
-        """Crée le circuit, les checkpoints et les deux voitures.
+        """Crée le circuit choisi, ses checkpoints, boosts, arrivée et départs,
+        puis les deux voitures choisies.
 
         Returns:
             None
         """
+        infos = CIRCUITS[self.choix_circuit]
+        terrains = {"R": Road, "H": Herbe, "T": Terre, "G": Glace, "V": Vide}
 
-        # R = Route, H = Herbe, T = Terre, G = Glace, V = Vide
-        
-        plan = [
-        "TTTTTTTTTTTTGGGG",
-        "TTTTTTTTTTTTGGGG",
-        "TTTTTTTTTTTTVGHH",
-        "TTTTTTTTTTTTVGHH",
-        "TTVVVVVTTTTTVVHH",
-        "TTTTTTVTTTTTVVHH",
-        "TTTTTTVTTTTTVVHH",
-        "RTTTTTVTTTTTVVHH",
-        "RRTTTTVVVVVVVVHH",
-        "RRRTTTTTTTTTTHHH",
-        "RRRRRRRRHHHHHHHH",
-        "RRRRRRRRHHHHHHHH"
-    ]
-        terrains = {"R": Road,"H": Herbe,"T": Terre,"G": Glace,"V": Vide}
-
+        # Construction de la grille à partir du plan
         grid = []
-
         for row in range(GRID_ROWS):
             ligne = []
             for col in range(GRID_COLS):
-                lettre = plan[row][col]
+                lettre = infos["plan"][row][col]
                 terrain = terrains[lettre]()
-                case = RoadTile(col, row, terrain)
-                ligne.append(case)
+                ligne.append(RoadTile(col, row, terrain))
             grid.append(ligne)
 
         self.circuit = Circuit(grid=grid)
 
-        #Création des checkpoints avec leurs cases et leurs positions de réapparition
-        self.circuit.add_checkpoint(cases=[(col, 9) for col in range(13, 16)],reapparition=(14,9))
-        self.circuit.add_checkpoint(cases=[(col, 1) for col in range(12, 16)],reapparition=(13, 1))
-        self.circuit.add_checkpoint(cases=[(col, 3) for col in range(0, 12)],reapparition=(7, 3))
-
-        #Placement des boosts
-        self.circuit.add_boost(7, 2)
-        self.circuit.add_boost(8, 2)
-        self.circuit.add_boost(9, 2)
-        self.circuit.add_boost(10, 2)
-
-        #Placement de la ligne d'arrivée
-        self.circuit.add_arrivee(8, 10)
-        self.circuit.add_arrivee(8, 11)
-
-        #Placement des positions de départ pour les deux joueurs
-        self.circuit.add_depart(1,7, 10)
-        self.circuit.add_depart(2,7, 11)
+        # Checkpoints, boosts, arrivée et départs du circuit choisi
+        for cp in infos["checkpoints"]:
+            self.circuit.add_checkpoint(cases=cp["cases"], reapparition=cp["reapparition"])
+        for col, row in infos["boosts"]:
+            self.circuit.add_boost(col, row)
+        for col, row in infos["arrivee"]:
+            self.circuit.add_arrivee(col, row)
+        for joueur, (col, row) in infos["departs"].items():
+            self.circuit.add_depart(joueur, col, row)
 
         self.terrain_precedent = None
 
-        #création voiture
+        # Création des voitures choisies
         self.spawn_car()
 
-        #Création du coordinateur de course
+        # Création du coordinateur de course
         self.coordinateur = RaceCoordinator(self.circuit)
+        col1, row1 = self.circuit.departs[1]
+        col2, row2 = self.circuit.departs[2]
+        self.coordinateur.ajouter_voiture(self.car, col1, row1)
+        self.coordinateur.ajouter_voiture(self.car2, col2, row2)
 
-        #Enregistrement des 2 voitures 
-        col1,row1 = self.circuit.departs[1]
-        col2,row2 = self.circuit.departs[2]
-
-        self.coordinateur.ajouter_voiture(self.car,col1,row1)
-        self.coordinateur.ajouter_voiture(self.car2,col2,row2)
-
-        #Mémorise si chaque voiture est déjà sur un boost
-        self.sur_boost = {self.car: False,self.car2: False}
-
-        print(self.coordinateur.progression)  # Affiche l'état initial de la progression des voitures
+        # Mémorise si chaque voiture est déjà sur un boost
+        self.sur_boost = {self.car: False, self.car2: False}
 
     def spawn_car(self) -> None:
 
         """Crée les deux voitures du jeu avec leurs caractéristiques respectives."""
 
-        col1,row1 = self.circuit.departs[1]
-        col2,row2 = self.circuit.departs[2]
+        """Crée les deux voitures choisies par les joueurs, sur leurs cases de départ."""
+        col1, row1 = self.circuit.departs[1]
+        col2, row2 = self.circuit.departs[2]
 
-        self.car = Car(SPORTS,col1,row1)
-        self.car2 = Car(TRUCK,col2,row2)
+        self.car = Car(CARS[self.choix_voiture[1]], col1, row1)
+        self.car2 = Car(CARS[self.choix_voiture[2]], col2, row2)
 
     def update(self) -> None:
         """Met à jour l'état du jeu, y compris la position de la voiture et les interactions avec le circuit.
@@ -190,6 +169,23 @@ class GameModel:
                 print(f"Terrain: {terrain.name}, Traction: {terrain.traction}, Grip: {terrain.grip}, Friction: {terrain.friction}")
                 self.terrain_precedent = terrain.name
 
-        
+    # choix de la voiture et du circuit
 
-        
+    def reset_selection(self) -> None:
+        """Remet les deux joueurs en mode 'pas encore prêt'."""
+        self.joueur_pret = {1: False, 2: False}
+
+    def changer_voiture(self, joueur: int, direction: int) -> None:
+        """Passe à la voiture suivante (+1) ou précédente (-1), en boucle."""
+        if self.joueur_pret[joueur]:
+            return  # un joueur qui a validé ne peut plus changer
+        self.choix_voiture[joueur] = (self.choix_voiture[joueur] + direction) % len(CARS)
+
+    def valider_voiture(self, joueur: int) -> None:
+        self.joueur_pret[joueur] = True
+
+    def tous_prets(self) -> bool:
+        return all(self.joueur_pret.values())
+
+    def changer_circuit(self, direction: int) -> None:
+        self.choix_circuit = (self.choix_circuit + direction) % len(CIRCUITS)

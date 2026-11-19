@@ -20,6 +20,8 @@ DEBUG_HITBOXES = True           # affiche les zones d'aspiration
 class GameState:
     MENU = "menu"
     RACING = "racing"
+    CAR_SELECT = "car_selection"
+    TRACK_SELECT = "track_selection"
 
 
 # --- Couleurs UI ---

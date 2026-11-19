@@ -5,18 +5,38 @@ from constants import (
     GameState, DEBUG_HITBOXES
 )
 from model.game_model import GameModel
-
+from model.car import Car, CARS
+from model.circuit_data import CIRCUITS
+from model.terrain import Road, Herbe, Terre, Glace, Vide
 
 class GameView:
 
     def __init__(self, screen: pygame.Surface):
         self.screen = screen
         self.font = pygame.font.SysFont("Arial", 24)
+        self.font_titre = pygame.font.SysFont("Arial", 40, bold=True)
+        self.font_petite = pygame.font.SysFont("Arial", 18)
+
+        # Aperçu agrandi de chaque voiture, calculé une seule fois
+        self.apercus = {}
+        for stats in CARS:
+            sprite = Car(stats, 0, 0).sprite
+            taille = (sprite.get_width() * 3, sprite.get_height() * 3)
+            self.apercus[stats.name] = pygame.transform.scale(sprite, taille)
+
+        # Couleur de chaque lettre du plan, pour la mini-carte des circuits
+        terrains = {"R": Road, "H": Herbe, "T": Terre, "G": Glace, "V": Vide}
+        self.couleurs_plan = {lettre: classe().color for lettre, classe in terrains.items()}
+
 
     def draw(self, model: GameModel) -> None:
         self.screen.fill(COLOR_BG)
         if model.state == GameState.MENU:
             self._draw_menu(model)
+        elif model.state == GameState.CAR_SELECT:
+            self.draw_car_select(model)
+        elif model.state == GameState.TRACK_SELECT:
+            self.draw_track_select(model)
         elif model.state == GameState.RACING:
             self._draw_racing(model)
         pygame.display.flip()
@@ -159,4 +179,80 @@ class GameView:
             y = (self.screen.get_height() - message.get_height()) // 2            
 
             self.screen.blit(message,(x,y))
-            
+
+
+    def _texte_centre(self, texte: str, police, couleur, x: int, y: int) -> None:
+        """Affiche un texte centré sur la position (x, y)."""
+        surface = police.render(texte, True, couleur)
+        self.screen.blit(surface, surface.get_rect(center=(x, y)))
+
+    def draw_car_select(self, model: GameModel) -> None:
+        """Affiche l'écran de choix des voitures, une colonne par joueur."""
+        cx = WINDOW_WIDTH // 2
+        self._texte_centre("Choix des voitures", self.font_titre, COLOR_ACCENT, cx, 60)
+
+        colonnes = {1: WINDOW_WIDTH // 4, 2: 3 * WINDOW_WIDTH // 4}
+        touches = {1: "<- ->  puis Entrée", 2: "Q / D  puis Espace"}
+
+        for joueur, x in colonnes.items():
+            stats = CARS[model.choix_voiture[joueur]]
+            pret = model.joueur_pret[joueur]
+
+            # Panneau du joueur (bordure en couleur d'accent quand il est prêt)
+            panneau = pygame.Rect(0, 0, 300, 360)
+            panneau.center = (x, WINDOW_HEIGHT // 2 + 20)
+            pygame.draw.rect(self.screen, COLOR_PANEL, panneau, border_radius=8)
+            pygame.draw.rect(self.screen, COLOR_ACCENT if pret else COLOR_PANEL_BORDER,
+                             panneau, 2, border_radius=8)
+
+            y = panneau.top
+            self._texte_centre(f"Joueur {joueur}", self.font, COLOR_TEXT, x, y + 30)
+
+            # Aperçu de la voiture
+            apercu = self.apercus[stats.name]
+            self.screen.blit(apercu, apercu.get_rect(center=(x, y + 100)))
+
+            # Nom et caractéristiques
+            self._texte_centre(f"<  {stats.name}  >", self.font, COLOR_ACCENT, x, y + 170)
+            self._texte_centre(f"Vitesse max : {stats.max_speed}", self.font_petite, COLOR_TEXT, x, y + 210)
+            self._texte_centre(f"Accélération : {stats.acceleration}", self.font_petite, COLOR_TEXT, x, y + 238)
+            self._texte_centre(f"Virage : {stats.turn_speed}", self.font_petite, COLOR_TEXT, x, y + 266)
+
+            # Statut
+            if pret:
+                self._texte_centre("PRÊT !", self.font, (80, 220, 80), x, y + 320)
+            else:
+                self._texte_centre(touches[joueur], self.font_petite, COLOR_TEXT, x, y + 320)
+
+        self._texte_centre("Échap : retour au menu", self.font_petite, COLOR_PANEL_BORDER,
+                           cx, WINDOW_HEIGHT - 25)
+
+    def draw_track_select(self, model: GameModel) -> None:
+        """Affiche l'écran de choix du circuit avec une mini-carte du plan."""
+        cx = WINDOW_WIDTH // 2
+        infos = CIRCUITS[model.choix_circuit]
+        self._texte_centre("Choix du circuit", self.font_titre, COLOR_ACCENT, cx, 60)
+
+        # Mini-carte : une petite case colorée par lettre du plan
+        taille = 16
+        plan = infos["plan"]
+        largeur = len(plan[0]) * taille
+        hauteur = len(plan) * taille
+        x0 = cx - largeur // 2
+        y0 = 120
+
+        for row, ligne in enumerate(plan):
+            for col, lettre in enumerate(ligne):
+                case = (x0 + col * taille, y0 + row * taille, taille, taille)
+                pygame.draw.rect(self.screen, self.couleurs_plan[lettre], case)
+        pygame.draw.rect(self.screen, COLOR_ACCENT, (x0 - 2, y0 - 2, largeur + 4, hauteur + 4), 2)
+
+        # Nom et position dans la liste
+        self._texte_centre(f"<  {infos['nom']}  >", self.font, COLOR_TEXT, cx, y0 + hauteur + 40)
+        self._texte_centre(f"{model.choix_circuit + 1} / {len(CIRCUITS)}", self.font_petite,
+                           COLOR_PANEL_BORDER, cx, y0 + hauteur + 72)
+
+        self._texte_centre("<- ->  pour choisir,  Entrée pour lancer la course", self.font_petite,
+                           COLOR_TEXT, cx, WINDOW_HEIGHT - 55)
+        self._texte_centre("Échap : retour au choix des voitures", self.font_petite,
+                           COLOR_PANEL_BORDER, cx, WINDOW_HEIGHT - 25)
