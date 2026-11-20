@@ -1,6 +1,7 @@
 from model.road_tile import RoadTile
 from constants import TILE_SIZE
 from model.terrain import Vide
+from model.bloc_special import BlocObjet
 
 class Circuit:
 
@@ -12,6 +13,7 @@ class Circuit:
         cols (int): Nombre de colonnes dans la grille.
         checkpoints (list[dict]): Liste des points de passage, chaque point de passage est un dictionnaire contenant les cases et la position de réapparition.
         boosts (list[tuple[int, int]]): Liste des positions des boosts sur le circuit.
+        blocs_objets (list[BlocObjet]): Liste des blocs objets sur le circuit.
         arrivee (list[tuple[int, int]]): Liste des positions de la ligne d'arrivée sur le circuit.
         departs (dict[int, tuple[int, int]]): Positions de départ des joueurs.
     """
@@ -26,6 +28,7 @@ class Circuit:
         self.cols = len(grid[0]) if grid else 0
         self.checkpoints = []
         self.boosts = []
+        self.blocs_objets = []
         self.arrivee = []
         self.departs = {}
 
@@ -75,6 +78,21 @@ class Circuit:
             None
         """
         self.boosts.append((col, row))
+
+    def add_bloc_objet(self, col: int, row: int) -> None:
+        """Ajoute un bloc objet au circuit.
+        Args:
+            col (int): La colonne du bloc dans la grille.
+            row (int): La ligne du bloc dans la grille.
+        Returns:
+            None
+        """
+        case = self.get_tile(col, row)
+        if case is None or isinstance(case.terrain, Vide):
+            raise ValueError("impossible de placer un cadeau sur cette case")
+
+        bloc = BlocObjet(col, row)
+        self.blocs_objets.append(bloc)
 
     def add_arrivee(self, col: int, row: int) -> None:
         """Ajoute une case d'arrivée au circuit.

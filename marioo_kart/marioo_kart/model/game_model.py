@@ -8,7 +8,9 @@ from model.road_tile import RoadTile
 from model.terrain import Road, Herbe, Terre, Glace, Vide   
 from model.race_coordinator import RaceCoordinator
 from model.circuit_data import CIRCUITS
-
+from model.bloc_special import Champignon, Banane, CarapaceBleue, Bombe, Etoile
+import random
+import math
 
 
 class GameModel:
@@ -20,6 +22,11 @@ class GameModel:
         car (Car | None): La voiture du joueur.
         car2 (Car | None): La deuxième voiture du joueur.
         terrain_precedent (str|None): Nom du dernier revêtement de la voiture.
+        objets_voitures (dict): Associe chaque voiture à son cadeau.
+                        None signifie qu'elle ne possède aucun cadeau.
+        sur_cadeau (dict): Indique si chaque voiture se trouve sur un cadeau
+        bananes (list): Liste des bananes déposées sur la piste
+        bombes (list): Liste des bombes déposées sur la psite
         """
 
     def __init__(self):
@@ -29,6 +36,10 @@ class GameModel:
         self.car2: Car | None = None
         self.coordinateur: RaceCoordinator | None = None
         self.terrain_precedent = None
+        self.objets_voitures = {}
+        self.sur_cadeau ={}
+        self.bananes = []
+        self.bombes = []
         self.collisions = CollisionManager(COLLISION_REBOND)
         self.menu_options = ["JOUER", "QUITTER"]
         self.menu_selection = 0  # index du bouton sélectionné dans le menu
@@ -60,11 +71,13 @@ class GameModel:
 
         self.circuit = Circuit(grid=grid)
 
-        # Checkpoints, boosts, arrivée et départs du circuit choisi
+        # Checkpoints, boosts,blocs cadeaux, arrivée et départs du circuit choisi
         for cp in infos["checkpoints"]:
             self.circuit.add_checkpoint(cases=cp["cases"], reapparition=cp["reapparition"])
         for col, row in infos["boosts"]:
             self.circuit.add_boost(col, row)
+        for col, row in infos["blocs_objets"]:
+            self.circuit.add_bloc_objet(col, row)
         for col, row in infos["arrivee"]:
             self.circuit.add_arrivee(col, row)
         for joueur, (col, row) in infos["departs"].items():
@@ -87,14 +100,18 @@ class GameModel:
 
     def spawn_car(self) -> None:
 
-        """Crée les deux voitures du jeu avec leurs caractéristiques respectives."""
+        """Crée les deux voitures du jeu avec leurs caractéristiques respectives sur leurs cases de départ"""
 
-        """Crée les deux voitures choisies par les joueurs, sur leurs cases de départ."""
         col1, row1 = self.circuit.departs[1]
         col2, row2 = self.circuit.departs[2]
 
         self.car = Car(CARS[self.choix_voiture[1]], col1, row1)
         self.car2 = Car(CARS[self.choix_voiture[2]], col2, row2)
+
+        #Objet possédé par voiture
+
+        self.objets_voitures = {self.car : None, self.car2 : None}
+        self.sur_cadeau ={self.car : False, self.car2 : False}
 
     def update(self) -> None:
         """Met à jour l'état du jeu, y compris la position de la voiture et les interactions avec le circuit.
@@ -149,6 +166,28 @@ class GameModel:
 
             self.sur_boost[voiture] = est_sur_boost
 
+            # Détection du passage sur un bloc cadeau
+            est_sur_cadeau = False
+
+            for bloc in self.circuit.blocs_objets:
+                if case.col == bloc.col and case.row == bloc.row:
+                    est_sur_cadeau = True
+
+            cadeaux = [Champignon,Banane,Bombe,Etoile,CarapaceBleue]
+
+            if est_sur_cadeau and not self.sur_cadeau[voiture]:
+                if self.objets_voitures[voiture] is None:
+
+                    probabilites = [35,30,20,10,5]
+                    cadeau = random.choices(cadeaux,weights=probabilites,k=1)[0]
+                    self.objets_voitures[voiture] = cadeau()
+                    print(f"Cadeau récupéré : {self.objets_voitures[voiture].nom} par {voiture.stats.name}")
+
+            self.sur_cadeau[voiture]=est_sur_cadeau
+
+        self.verifier_collisions_bananes()
+        self.verifier_collision_bombes()
+
         # Collisions entre voitures et détection d'aspiration
         voitures = [self.car, self.car2]
         self.collisions.gerer_collisions(voitures)
@@ -168,6 +207,7 @@ class GameModel:
             if terrain.name != self.terrain_precedent:
                 print(f"Terrain: {terrain.name}, Traction: {terrain.traction}, Grip: {terrain.grip}, Friction: {terrain.friction}")
                 self.terrain_precedent = terrain.name
+        
 
     # choix de la voiture et du circuit
 
@@ -189,3 +229,35 @@ class GameModel:
 
     def changer_circuit(self, direction: int) -> None:
         self.choix_circuit = (self.choix_circuit + direction) % len(CIRCUITS)
+
+    #méthode vérification passage sur banane
+
+    def verifier_collisions_bananes(self):
+        """Détecte la collision entre une voiture et bananes déposées.
+        Banane disparaît si la voiture passe suffisamment près."""
+
+        for voiture in [self.car,self.car2]:
+            for banane in self.bananes[:]:
+                x,y = banane
+
+                distance = math.sqrt((voiture.x-x)**2 + (voiture.y-y)**2)
+
+                if distance < 20:
+                    self.bananes.remove(banane)
+                    print("Une voiture a touché une banane")
+
+    #méthode vérification passage sur bombe
+
+    def verifier_collision_bombes(self):
+        """Détecte la collision entre une voiture et bombes déposées.
+        Bombe disparaît si la voiture passe suffisamment près."""
+        
+        for voiture in [self.car,self.car2]:
+            for bombe in self.bombes[:]:
+                x,y = bombe
+            
+                distance = math.sqrt((voiture.x-x)**2 + (voiture.y-y)**2)
+            
+                if distance < 20:
+                    self.bombes.remove(bombe)
+                    print("Une voiture a touché une bombe")

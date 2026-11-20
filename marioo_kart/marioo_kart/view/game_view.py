@@ -62,7 +62,7 @@ class GameView:
 
     def _draw_racing(self, model: GameModel) -> None:
 
-        """Affiche le circuit, les points de passage et les 2 voitures.
+        """Affiche le circuit avec les différents objets, les points de passage et les 2 voitures.
         Args:
             model (GameModel): Le modèle du jeu contenant l'état actuel.
         Returns:
@@ -99,6 +99,17 @@ class GameView:
             rect = texte_boost.get_rect(center=(x, y))
             self.screen.blit(texte_boost, rect)
 
+        #affichage des blocs cadeaux
+
+        for bloc in model.circuit.blocs_objets:
+            x = bloc.col * TILE_SIZE + TILE_SIZE // 2
+            y = bloc.row * TILE_SIZE + TILE_SIZE // 2
+            
+            texte = self.font.render("?",True,(255, 255, 255))
+            rect = texte.get_rect(center=(x, y))
+            self.screen.blit(texte, rect)
+
+
         #affichage de la ligne d'arrivée
 
         texte_arrivee = self.font.render("L",True,(255, 255, 255))
@@ -119,6 +130,17 @@ class GameView:
             rect = texte.get_rect(center=(x, y))
             self.screen.blit(texte, rect)
 
+        #affichage bananes déposées sur le circuit
+
+        for x,y in model.bananes:
+            pygame.draw.circle(self.screen,(255,220,0),(int(x),int(y)),8)
+
+        #affichage bombmes déposées sur le circuit
+
+        for x,y in model.bombes:
+            pygame.draw.circle(self.screen,(220,40,40),(int(x),int(y)),10)
+            pygame.draw.circle(self.screen, (0, 0, 0), (int(x), int(y)), 10, 2)
+
         #première voiture
         surf, rect = model.car.get_rotated_sprite()
         self.screen.blit(surf, rect)
@@ -138,18 +160,33 @@ class GameView:
                 couleur = (0, 255, 0) if occupee else (0, 120, 255)
                 pygame.draw.polygon(self.screen, couleur, zone.coins(voiture), 1)
 
-        #affichage nb de tours
+        #affichage nb de tours 
 
         tours_j1 = model.coordinateur.tours[model.car]
         tours_j2 = model.coordinateur.tours[model.car2]
 
         nb_tours= model.coordinateur.nb_tours
 
-        texte_j1 = self.font.render(f"Joueur 1 : {tours_j1}/{nb_tours} tours", True, (255, 255, 255))
-        texte_j2 = self.font.render(f"Joueur 2 : {tours_j2}/{nb_tours} tours", True, (255, 255, 255))
+        #affichage cadeaux pour chaque joueur si rien affiche "Aucun"
 
-        self.screen.blit(texte_j1, (10, 10))
-        self.screen.blit(texte_j2, (10, 40))
+        objet_j1 = model.objets_voitures[model.car]
+        objet_j2 = model.objets_voitures[model.car2]
+
+        if objet_j1 is None:
+            cadeau_j1 = "Aucun"
+        else:
+            cadeau_j1 = objet_j1.nom
+
+        if objet_j2 is None:
+            cadeau_j2 = "Aucun"
+        else:
+            cadeau_j2 = objet_j2.nom
+
+        texte_cadeau_j1 = self.font.render(f"J1 : {tours_j1}/{nb_tours} tours - Cadeau : {cadeau_j1}",True,(255,255,255))
+        texte_cadeau_j2 = self.font.render(f"J2 : {tours_j2}/{nb_tours} tours - Cadeau : {cadeau_j2}",True,(255,255,255))
+        self.screen.blit(texte_cadeau_j1,(10,10))
+        self.screen.blit(texte_cadeau_j2,(10,40))
+
 
         #affichage sens circulation
 

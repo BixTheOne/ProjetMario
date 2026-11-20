@@ -7,6 +7,7 @@ from constants import (
 from model.game_model import GameModel
 from view.game_view import GameView
 from controller.input_handler import InputHandler
+from model.bloc_special import Banane,Bombe
 
 
 class GameController:
@@ -44,6 +45,26 @@ class GameController:
             self.handle_car_select_key(key)
         elif state == GameState.TRACK_SELECT:
             self.handle_track_select_key(key)
+        elif state == GameState.RACING:
+            if key == pygame.K_RETURN:
+                voiture = self.model.car
+            elif key == pygame.K_SPACE:
+                voiture = self.model.car2
+            else:
+                return
+
+            objet = self.model.objets_voitures[voiture]
+
+            if objet is not None:
+                if isinstance(objet,(Banane,Bombe)):
+                    objet.utiliser(voiture,self.model)
+                else:
+                    objet.utiliser(voiture)
+
+                print(f"Utilisation du cadeau : {objet.nom}")
+                self.model.objets_voitures[voiture] = None
+            else:
+                print("Cette voiture ne possède pas de cadeau")
 
     def handle_menu_key(self, key: int) -> None:
         nb_options = len(self.model.menu_options)
