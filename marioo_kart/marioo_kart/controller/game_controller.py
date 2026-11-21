@@ -7,7 +7,7 @@ from constants import (
 from model.game_model import GameModel
 from view.game_view import GameView
 from controller.input_handler import InputHandler
-from model.bloc_special import Banane,Bombe
+from model.bloc_special import Banane,Bombe,Etoile,CarapaceBleue
 
 
 class GameController:
@@ -56,10 +56,10 @@ class GameController:
             objet = self.model.objets_voitures[voiture]
 
             if objet is not None:
-                if isinstance(objet,(Banane,Bombe)):
+                if isinstance(objet,(Banane,Bombe,Etoile,CarapaceBleue)):
                     objet.utiliser(voiture,self.model)
                 else:
-                    objet.utiliser(voiture)
+                    objet.utiliser(voiture)#cas cadeau Champignon
 
                 print(f"Utilisation du cadeau : {objet.nom}")
                 self.model.objets_voitures[voiture] = None

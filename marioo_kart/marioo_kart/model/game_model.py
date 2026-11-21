@@ -11,6 +11,7 @@ from model.circuit_data import CIRCUITS
 from model.bloc_special import Champignon, Banane, CarapaceBleue, Bombe, Etoile
 import random
 import math
+import time
 
 
 class GameModel:
@@ -27,6 +28,8 @@ class GameModel:
         sur_cadeau (dict): Indique si chaque voiture se trouve sur un cadeau
         bananes (list): Liste des bananes déposées sur la piste
         bombes (list): Liste des bombes déposées sur la psite
+        temps_bombes (dict): Associe à chaque bombe son instant de dépôt
+        temps_etoile(dict): Associe chaque voiture à la fin de son invincibilité
         """
 
     def __init__(self):
@@ -40,6 +43,8 @@ class GameModel:
         self.sur_cadeau ={}
         self.bananes = []
         self.bombes = []
+        self.temps_bombes={}
+        self.temps_etoiles={}
         self.collisions = CollisionManager(COLLISION_REBOND)
         self.menu_options = ["JOUER", "QUITTER"]
         self.menu_selection = 0  # index du bouton sélectionné dans le menu
@@ -187,6 +192,7 @@ class GameModel:
 
         self.verifier_collisions_bananes()
         self.verifier_collision_bombes()
+        self.verifier_etoiles()
 
         # Collisions entre voitures et détection d'aspiration
         voitures = [self.car, self.car2]
@@ -244,20 +250,57 @@ class GameModel:
 
                 if distance < 20:
                     self.bananes.remove(banane)
-                    print("Une voiture a touché une banane")
+
+                    if voiture in self.temps_etoiles:
+                        print(f"{voiture.stats.name} a touché une banane avec invincibilité")
+                    else:
+                        print(f"{voiture.stats.name} a touché une banane sans invincibilité")
 
     #méthode vérification passage sur bombe
 
     def verifier_collision_bombes(self):
-        """Détecte la collision entre une voiture et bombes déposées.
-        Bombe disparaît si la voiture passe suffisamment près."""
+        """Détecte l'explosion d'une bombe.
+        Une bombe explose après 3 secondes ou lorsque qu'une voiture passe à moins de 20 pixels.
+        Toutes les voitures situées dans un rayon de 80 pixels seront touchées par l'explosion.
+        """
         
-        for voiture in [self.car,self.car2]:
-            for bombe in self.bombes[:]:
-                x,y = bombe
-            
+        
+        for bombe in self.bombes[:]:
+            x,y = bombe
+
+            temps_ecoule = time.monotonic() - self.temps_bombes[(x,y)]
+
+            explosion = temps_ecoule >= 3
+
+            for voiture in [self.car,self.car2]:
+
                 distance = math.sqrt((voiture.x-x)**2 + (voiture.y-y)**2)
-            
+                
                 if distance < 20:
-                    self.bombes.remove(bombe)
-                    print("Une voiture a touché une bombe")
+                    explosion = True
+
+            #Déclenchement explosion
+
+            if explosion:
+                print("Boum !")
+
+                for voiture in [self.car,self.car2]:
+                    distance = math.sqrt((voiture.x-x)**2 + (voiture.y-y)**2)
+
+                    if distance < 120:
+                        if voiture in self.temps_etoiles:
+                            print(f"{voiture.stats.name} est protégée par son étoile !")
+                        else:
+                            print(f"{voiture.stats.name} est touchée par l'explosion !")
+
+                self.bombes.remove((x,y))
+                del self.temps_bombes[(x,y)]
+
+    def verifier_etoiles(self):
+        """Désactive l'invicibilité des voitures après 5 secondes."""
+
+        for voiture in list(self.temps_etoiles):
+            if time.monotonic() >= self.temps_etoiles[voiture]:
+                del self.temps_etoiles[voiture]
+                print("L'invincibilité de la voiture est terminée")
+                 

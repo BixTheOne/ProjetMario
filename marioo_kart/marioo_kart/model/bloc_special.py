@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 import math
+import time
 
 class BlocSpecial(ABC):
     """Classe abstraite représentant un bloc spécial dans le circuit."""
@@ -132,6 +133,7 @@ class Bombe(Objet):
         y = voiture.y - distance*math.sin(voiture.heading)
         
         model.bombes.append((x,y))
+        model.temps_bombes[(x,y)]=time.monotonic()
         print("Bombe déposée :", x, y)
 
 class Etoile(Objet):
@@ -140,24 +142,36 @@ class Etoile(Objet):
     def __init__(self):
         super().__init__("Etoile")
 
-    def utiliser(self, voiture):
+    def utiliser(self, voiture,model):
         """Permettra de rentre temporairement la voiture invincible.
         
         Args:
-            Voiture (Car): voiture qui utilise l'étoile.
+            voiture (Car): voiture qui utilise l'étoile.
+            model (GameModel) : Modèle contenant les durées d'invincibilté
         """
-        pass
+        model.temps_etoiles[voiture]= time.monotonic() +10
+
+        print("Etoile activée pendant 10 secondes")
 
 class CarapaceBleue(Objet):
-    """Classe représentant une carapace bleue qui attaque le joueur en tête."""
+    """Classe représentant une carapace bleue qui attaque directement l'adversaire."""
 
     def __init__(self):
         super().__init__("Carapace Bleue")
 
-    def utiliser(self, voiture):
-        """Permettra d'attaquer la voiture en tête.
+    def utiliser(self, voiture,model):
+        """Attaque directement la voiture adverse en tenant compte de son invincibilité
         
         Args:
             Voiture (Car): voiture qui utilise la carapace bleue.
+            model (GameModel) : Modèle contenant les voitures et les étoiles actives
         """
-        pass
+        if voiture == model.car:
+            adversaire = model.car2
+        else:
+            adversaire = model.car
+
+        if adversaire in model.temps_etoiles:
+            print(f"{adversaire.stats.name} est protégée par son étoile !")
+        else:
+            print(f"{adversaire.stats.name} est touchée par la carapace bleue !")
