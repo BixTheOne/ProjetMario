@@ -15,7 +15,7 @@ COLLISION_REBOND = 0.5          # 0 = choc mou, 1 = rebond total
 ASPIRATION_LONGUEUR = 60        # longueur de la zone derrière la voiture (px)
 ASPIRATION_LARGEUR = CAR_WIDTH  # même largeur que la voiture
 DEBUG_HITBOXES = True           # affiche les zones d'aspiration
-
+ASPIRATION_BONUS = 1.25        # vitesse max x1.25 quand on suit une voiture
 
 class GameState:
     MENU = "menu"

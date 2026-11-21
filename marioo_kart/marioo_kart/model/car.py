@@ -6,6 +6,7 @@ from constants import (
 )
 from model.hitbox import Hitbox
 from dataclasses import dataclass, replace
+from constants import ASPIRATION_BONUS
 
 
 @dataclass(frozen=True)
@@ -86,7 +87,10 @@ class Car:
                 v_long = max(0, v_long - ralentissement)
             elif v_long < 0:
                 v_long = min(0, v_long + ralentissement)
-        v_long = max(-self.stats.max_speed / 4, min(v_long, self.stats.max_speed))
+        vitesse_max = self.stats.max_speed
+        if self.en_aspiration:
+            vitesse_max = self.stats.max_speed * ASPIRATION_BONUS
+        v_long = max(-self.stats.max_speed / 4, min(v_long, vitesse_max))
 
         # Gestion du dérapage
         demande = abs(v_lat)
