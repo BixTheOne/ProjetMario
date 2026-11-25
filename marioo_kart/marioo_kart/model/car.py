@@ -27,10 +27,11 @@ FROTTEMENT = 0.1             # intensité du ralentissement quand on n'accélèr
 class Car:
     
 
-    def __init__(self, stats: CarStats, start_col: int, start_row: int):
+    def __init__(self, stats: CarStats, start_col: int, start_row: int, couleur: tuple[int, int, int] | None = None):
 
         self.stats = stats
-
+        # Couleur du joueur si elle est fournie, sinon la couleur du véhicule
+        self.couleur = couleur if couleur is not None else stats.color
         #données de position et de mouvement qui évolue
         self.speed = 0.0
         #les trois vecteurs sur la voiture comme sur le schéma
@@ -141,7 +142,7 @@ class Car:
 
     def couleur_foncee(self, ecart: int = 70) -> tuple[int, int, int]:
         """Renvoie une version plus foncée de la couleur de la voiture."""
-        r, g, b = self.stats.color
+        r, g, b = self.couleur
         return (max(0, r - ecart), max(0, g - ecart), max(0, b - ecart))
     
     def dessin_phares(self, surf, longueur, largeur) -> None:    
@@ -152,7 +153,7 @@ class Car:
         pygame.draw.circle(surf, (255, 230, 120), (x_phares, largeur - rayon - 2), rayon)   # phare droit
 
     def dessiner_Sport(self, surf, longueur, largeur) -> None:
-        pygame.draw.rect(surf, self.stats.color, (0, 0, longueur, largeur), border_radius=5)
+        pygame.draw.rect(surf, self.couleur, (0, 0, longueur, largeur), border_radius=5)
 
         # Bande blanche au centre, sur toute la longueur
         epaisseur = max(1, largeur // 10)
@@ -187,7 +188,7 @@ class Car:
 
         # Corps de la moto (réservoir et carénage), à la couleur de la voiture
         epaisseur_corps = max(4, largeur // 3)
-        pygame.draw.rect(surf, self.stats.color,
+        pygame.draw.rect(surf, self.couleur,
                          (int(longueur * 0.18), cy - epaisseur_corps // 2,
                           int(longueur * 0.6), epaisseur_corps), border_radius=4)
 
@@ -224,7 +225,7 @@ class Car:
 
     def dessiner_camion(self, surf, longueur, largeur) -> None:
         # Dessin d'un camion vu de dessus, l'avant tourné vers la droite
-        pygame.draw.rect(surf, self.stats.color, (0, 0, longueur, largeur), border_radius=3)
+        pygame.draw.rect(surf, self.couleur, (0, 0, longueur, largeur), border_radius=3)
 
         # Cabine du camion à l'avant
         cabine_longueur = int(longueur * 0.3)
@@ -233,7 +234,7 @@ class Car:
 
         # Remorque du camion à l'arrière
         remorque_longueur = longueur - cabine_longueur
-        pygame.draw.rect(surf, self.couleur_foncee(), (0, 0, remorque_longueur, largeur),
+        pygame.draw.rect(surf, self.couleur, (0, 0, remorque_longueur, largeur),
                          border_radius=2)
 
         self.dessin_phares(surf, longueur, largeur)
@@ -270,10 +271,10 @@ class Car:
             (int(longueur * 0.7), cy + demi),
             (int(longueur * 0.07), cy + demi),
         ]
-        pygame.draw.polygon(surf, self.stats.color, corps)
+        pygame.draw.polygon(surf, self.couleur, corps)
 
         # Pontons latéraux, plus larges, entre les roues
-        pygame.draw.rect(surf, self.stats.color,
+        pygame.draw.rect(surf, self.couleur,
                          (int(longueur * 0.3), cy - epaisseur, int(longueur * 0.3), 2 * epaisseur),
                          border_radius=3)
 
@@ -293,13 +294,11 @@ class Car:
         bleu_bande = (20, 60, 200)
 
         # Carrosserie
-        pygame.draw.rect(surf, self.stats.color, (0, 0, longueur, largeur), border_radius=5)
-
-        # Bandes bleues le long des deux côtés
+        pygame.draw.rect(surf, (235, 235, 240), (0, 0, longueur, largeur), border_radius=5) # rectangle principal blanc puis bande de la couleur du joueur
+        #bande en fonction de la couleur du joueur
         bande = max(1, largeur // 10)
-        pygame.draw.rect(surf, bleu_bande, (2, 1, longueur - 4, bande))
-        pygame.draw.rect(surf, bleu_bande, (2, largeur - 1 - bande, longueur - 4, bande))
-
+        pygame.draw.rect(surf, self.couleur, (2, 1, longueur - 4, bande))
+        pygame.draw.rect(surf, self.couleur, (2, largeur - 1 - bande, longueur - 4, bande))
         # Lunette arrière et pare-brise
         pygame.draw.rect(surf, vitre, (int(longueur * 0.18), int(largeur * 0.2),
                                        int(longueur * 0.1), int(largeur * 0.6)), border_radius=2)

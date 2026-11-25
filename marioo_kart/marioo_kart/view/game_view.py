@@ -1,14 +1,13 @@
 import pygame
 from constants import (
-    WINDOW_WIDTH, WINDOW_HEIGHT, TILE_SIZE,
-    COLOR_BG, COLOR_TEXT, COLOR_ACCENT, COLOR_PANEL, COLOR_PANEL_BORDER,
+    COULEURS_JOUEURS, WINDOW_WIDTH, WINDOW_HEIGHT, TILE_SIZE,
+    COLOR_BG, COLOR_TEXT, COLOR_ACCENT, COLOR_PANEL, COLOR_PANEL_BORDER, COULEURS_JOUEURS,
     GameState, DEBUG_HITBOXES
 )
 from model.game_model import GameModel
 from model.car import Car, CARS
 from model.circuit_data import CIRCUITS
 from model.terrain import Road, Herbe, Terre, Glace, Vide
-
 class GameView:
 
     def __init__(self, screen: pygame.Surface):
@@ -19,10 +18,11 @@ class GameView:
 
         # Aperçu agrandi de chaque voiture, calculé une seule fois
         self.apercus = {}
-        for stats in CARS:
-            sprite = Car(stats, 0, 0).sprite
-            taille = (sprite.get_width() * 3, sprite.get_height() * 3)
-            self.apercus[stats.name] = pygame.transform.scale(sprite, taille)
+        for joueur, couleur in COULEURS_JOUEURS.items():
+            for stats in CARS:
+                sprite = Car(stats, 0, 0, couleur).sprite 
+                taille = (sprite.get_width() * 3, sprite.get_height() * 3)
+                self.apercus[(joueur, stats.name)] = pygame.transform.scale(sprite, taille)
 
         # Couleur de chaque lettre du plan, pour la mini-carte des circuits
         terrains = {"R": Road, "H": Herbe, "T": Terre, "G": Glace, "V": Vide}
@@ -246,7 +246,7 @@ class GameView:
             self._texte_centre(f"Joueur {joueur}", self.font, COLOR_TEXT, x, y + 30)
 
             # Aperçu de la voiture
-            apercu = self.apercus[stats.name]
+            apercu = self.apercus[(joueur, stats.name)]
             self.screen.blit(apercu, apercu.get_rect(center=(x, y + 100)))
 
             # Nom et caractéristiques

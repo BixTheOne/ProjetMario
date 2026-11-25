@@ -12,6 +12,7 @@ from model.bloc_special import Champignon, Banane, CarapaceBleue, Bombe, Etoile
 import random
 import math
 import time
+from constants import COULEURS_JOUEURS
 
 
 class GameModel:
@@ -110,8 +111,8 @@ class GameModel:
         col1, row1 = self.circuit.departs[1]
         col2, row2 = self.circuit.departs[2]
 
-        self.car = Car(CARS[self.choix_voiture[1]], col1, row1)
-        self.car2 = Car(CARS[self.choix_voiture[2]], col2, row2)
+        self.car = Car(CARS[self.choix_voiture[1]], col1, row1, COULEURS_JOUEURS[1])
+        self.car2 = Car(CARS[self.choix_voiture[2]], col2, row2, COULEURS_JOUEURS[2])
 
         #Objet possédé par voiture
 

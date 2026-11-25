@@ -30,3 +30,9 @@ COLOR_TEXT = (240, 240, 240)
 COLOR_ACCENT = (255, 200, 0)
 COLOR_PANEL = (30, 30, 50)
 COLOR_PANEL_BORDER = (60, 60, 100)
+
+
+COULEURS_JOUEURS = {
+    1: (255, 0, 0),      # Rouge
+    2: (0, 120, 255),      # Vert
+}
