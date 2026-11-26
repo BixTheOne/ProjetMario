@@ -56,7 +56,7 @@ class GameModel:
         self.choix_circuit = 0         
                     # indice dans CIRCUITS
     def load_circuit(self) -> None:
-        """Crée le circuit choisi, ses checkpoints, boosts, arrivée et départs,
+        """Crée le circuit choisi, ses checkpoints, boosts/blocs cadeaux, arrivée et départs,
         puis les deux voitures choisies.
 
         Returns:
@@ -114,7 +114,7 @@ class GameModel:
         self.car = Car(CARS[self.choix_voiture[1]], col1, row1, COULEURS_JOUEURS[1])
         self.car2 = Car(CARS[self.choix_voiture[2]], col2, row2, COULEURS_JOUEURS[2])
 
-        #Objet possédé par voiture
+        #Objet possédé par voiture au départ => None
 
         self.objets_voitures = {self.car : None, self.car2 : None}
         self.sur_cadeau ={self.car : False, self.car2 : False}
@@ -122,9 +122,12 @@ class GameModel:
     def update(self) -> None:
         """Met à jour l'état du jeu, y compris la position de la voiture et les interactions avec le circuit.
             Les caractéristiques du terrain sont affichées si la voiture rentre sur un revêtement différent
-            ou affiche un message si la voiture est en dehors du circuit.
-            
-            Returns: None"""
+            ou affiche un message si la voiture est en dehors du circuit (uniquement pour le joueur 1) 
+            Affichage de message pour les différents objets rencontrés (boosts/cadeaux) ainsi que leur activation 
+            par un des joueurs.          
+            Returns: 
+                None
+            """
         if self.state != GameState.RACING or self.circuit is None:
             return
 
@@ -179,6 +182,7 @@ class GameModel:
                 if case.col == bloc.col and case.row == bloc.row:
                     est_sur_cadeau = True
 
+            #Affectation du type de bloc cadeau
             cadeaux = [Champignon,Banane,Bombe,Etoile,CarapaceBleue]
 
             if est_sur_cadeau and not self.sur_cadeau[voiture]:
@@ -190,6 +194,8 @@ class GameModel:
                     print(f"Cadeau récupéré : {self.objets_voitures[voiture].nom} par {voiture.stats.name}")
 
             self.sur_cadeau[voiture]=est_sur_cadeau
+
+        #Vérification coliisions avec objets déposés par un des joueurs
 
         self.verifier_collisions_bananes()
         self.verifier_collision_bombes()
@@ -205,7 +211,7 @@ class GameModel:
                 etat = "entre en" if v.en_aspiration else "sort de"
                 print(f"{v.stats.name} {etat} aspiration")
 
-        # Affichage des changements de terrain du joueur 1
+        # Affichage des changements de terrain du joueur 1 
         case = self.circuit.get_tile_at_pixel(self.car.x, self.car.y)
 
         if case is not None:
@@ -298,7 +304,7 @@ class GameModel:
                 del self.temps_bombes[(x,y)]
 
     def verifier_etoiles(self):
-        """Désactive l'invicibilité des voitures après 5 secondes."""
+        """Désactive l'invicibilité des voitures après 10 secondes."""
 
         for voiture in list(self.temps_etoiles):
             if time.monotonic() >= self.temps_etoiles[voiture]:

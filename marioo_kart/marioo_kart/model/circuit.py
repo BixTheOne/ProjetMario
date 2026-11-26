@@ -33,6 +33,13 @@ class Circuit:
         self.departs = {}
 
     def get_tile(self, col: int, row: int) -> RoadTile | None:
+        """Recupère une case du circuit à partir de coordonnées.
+        Args:
+            col (int): Indice colonne de la case
+            row (int): Indice ligne de la case
+        Returns:
+            RoadTile | None : Case correspondante si indices correctes, None si la case est dehors du circuit.
+        """
         if 0 <= row < self.rows and 0 <= col < self.cols:
             return self.grid[row][col]
         return None
@@ -59,14 +66,29 @@ class Circuit:
        
 
     def get_tile_at_pixel(self, px: float, py: float) -> RoadTile | None:
+        """Récupère la case du circuit correspondant à une position en pixels.        
+        Args:
+            px (float): Coordonnée horizontale en pixels
+            py (float): Coordonnée verticale en pixels
+        Returns:
+            RoadTile | None: Case correspondante ou None si en dehors du circuit
+        """
         col = int(px // TILE_SIZE)
         row = int(py // TILE_SIZE)
         return self.get_tile(col, row)
 
     def pixel_width(self) -> int:
+        """Calcul la largeur totale du circuit en pixels.
+        Returns:
+            int: Largeur du circuit en pixels
+        """
         return self.cols * TILE_SIZE
 
     def pixel_height(self) -> int:
+        """Calcul la hauteur totale du circuit en pixels.
+        Returns:
+            int: Hauteur du circuit en pixels
+        """
         return self.rows * TILE_SIZE
 
     def add_boost(self, col: int, row: int) -> None:
@@ -74,8 +96,6 @@ class Circuit:
         Args:
             col (int): Colonne de la case de boost.
             row (int): Ligne de la case de boost.
-        Returns:
-            None
         """
         self.boosts.append((col, row))
 
@@ -84,8 +104,6 @@ class Circuit:
         Args:
             col (int): La colonne du bloc dans la grille.
             row (int): La ligne du bloc dans la grille.
-        Returns:
-            None
         """
         case = self.get_tile(col, row)
         if case is None or isinstance(case.terrain, Vide):
@@ -99,8 +117,6 @@ class Circuit:
         Args:
             col (int): Colonne de la case d'arrivée.
             row (int): Ligne de la case d'arrivée.
-        Returns:
-            None
         """
         self.arrivee.append((col, row))
 

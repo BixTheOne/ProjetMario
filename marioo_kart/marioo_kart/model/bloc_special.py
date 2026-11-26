@@ -3,7 +3,9 @@ import math
 import time
 
 class BlocSpecial(ABC):
-    """Classe abstraite représentant un bloc spécial dans le circuit."""
+    """Classe abstraite représentant un bloc spécial dans le circuit. (effectué avant l'information que les classes 
+    abstraites/héréditaires ne sont plus évaluées). Cette classe est laissée mais n'est pas utilisée dans le jeu.
+    Il a été décidé de seulement s'occuper des blocs cadeaux et de ne pas faire les blocs à effets spéciaux."""
 
     def __init__(self, col: int, row: int):
         """Initialise la position du bloc dans la grille.
@@ -154,7 +156,7 @@ class Etoile(Objet):
         print("Etoile activée pendant 10 secondes")
 
 class CarapaceBleue(Objet):
-    """Classe représentant une carapace bleue qui attaque directement l'adversaire."""
+    """Classe représentant une carapace bleue qui dépose une bombe directement sur l'adversaire."""
 
     def __init__(self):
         super().__init__("Carapace Bleue")

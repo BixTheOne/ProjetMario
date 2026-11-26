@@ -135,7 +135,7 @@ class GameView:
         for x,y in model.bananes:
             pygame.draw.circle(self.screen,(255,220,0),(int(x),int(y)),8)
 
-        #affichage bombmes déposées sur le circuit
+        #affichage bombes déposées sur le circuit
 
         for x,y in model.bombes:
             pygame.draw.circle(self.screen,(220,40,40),(int(x),int(y)),10)

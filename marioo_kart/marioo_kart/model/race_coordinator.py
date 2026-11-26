@@ -110,7 +110,7 @@ class RaceCoordinator:
         """
 
         if self.tours[voiture] >= self.nb_tours:
-            return False #  # La voiture a déjà terminé la course
+            return False #la voiture a déjà terminé la course
 
         if(col,row) not in self.circuit.arrivee:
             return False  #voiture n'est pas sur la ligne d'arrivée
