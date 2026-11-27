@@ -22,6 +22,7 @@ class GameState:
     RACING = "racing"
     CAR_SELECT = "car_selection"
     TRACK_SELECT = "track_selection"
+    RULES = "rules"
 
 
 # --- Couleurs UI ---

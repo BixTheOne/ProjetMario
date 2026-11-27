@@ -45,6 +45,9 @@ class GameController:
             self.handle_car_select_key(key)
         elif state == GameState.TRACK_SELECT:
             self.handle_track_select_key(key)
+        elif state == GameState.RULES:
+            if key == pygame.K_ESCAPE:
+                self.model.state = GameState.MENU
         elif state == GameState.RACING:
             if key == pygame.K_RETURN:
                 voiture = self.model.car
@@ -75,11 +78,13 @@ class GameController:
             self.model.menu_selection = (self.model.menu_selection + 1) % nb_options
         elif key == pygame.K_RETURN:
             choix = self.model.menu_options[self.model.menu_selection]
-        if choix == "JOUER":
-            self.model.reset_selection()
-            self.model.state = GameState.CAR_SELECT
-        elif choix == "QUITTER":
-            self.quit()
+            if choix == "JOUER":
+                self.model.reset_selection()
+                self.model.state = GameState.CAR_SELECT
+            elif choix == "RÈGLES":
+                self.model.state = GameState.RULES
+            elif choix == "QUITTER":
+                self.quit()
         elif key == pygame.K_ESCAPE:
             self.quit()
 

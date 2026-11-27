@@ -47,7 +47,7 @@ class GameModel:
         self.temps_bombes={}
         self.temps_etoiles={}
         self.collisions = CollisionManager(COLLISION_REBOND)
-        self.menu_options = ["JOUER", "QUITTER"]
+        self.menu_options = ["JOUER", "RÈGLES", "QUITTER"]
         self.menu_selection = 0  # index du bouton sélectionné dans le menu
 
         #choix de la voiture et du circuit

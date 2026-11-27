@@ -2,7 +2,7 @@ import pygame
 from constants import (
     COULEURS_JOUEURS, WINDOW_WIDTH, WINDOW_HEIGHT, TILE_SIZE,
     COLOR_BG, COLOR_TEXT, COLOR_ACCENT, COLOR_PANEL, COLOR_PANEL_BORDER, COULEURS_JOUEURS,
-    GameState, DEBUG_HITBOXES
+    GameState, DEBUG_HITBOXES, ASPIRATION_BONUS
 )
 from model.game_model import GameModel
 from model.car import Car, CARS
@@ -37,6 +37,8 @@ class GameView:
             self.draw_car_select(model)
         elif model.state == GameState.TRACK_SELECT:
             self.draw_track_select(model)
+        elif model.state == GameState.RULES:
+            self.draw_rules()
         elif model.state == GameState.RACING:
             self._draw_racing(model)
         pygame.display.flip()
@@ -293,3 +295,77 @@ class GameView:
                            COLOR_TEXT, cx, WINDOW_HEIGHT - 55)
         self._texte_centre("Échap : retour au choix des voitures", self.font_petite,
                            COLOR_PANEL_BORDER, cx, WINDOW_HEIGHT - 25)
+
+    def draw_rules(self) -> None:
+        """Affiche la page des règles : touches, terrains, cases spéciales, objets et autres."""
+        cx = WINDOW_WIDTH // 2
+        self._texte_centre("Règles", self.font_titre, COLOR_ACCENT, cx, 40)
+
+        icone = 24
+        couleur_route = Road().color
+
+        def titre(texte, x, y):
+            self.screen.blit(self.font.render(texte, True, COLOR_ACCENT), (x, y))
+            return y + 36
+
+        def ligne(texte, x, y):
+            self.screen.blit(self.font_petite.render(texte, True, COLOR_TEXT), (x, y))
+
+        x = 40
+        y = titre("Touches", x, 90)
+        for texte in ["Joueur 1 : flèches, Entrée pour utiliser l'objet",
+                      "Joueur 2 : Z Q S D, Espace pour utiliser l'objet",
+                      "Menus : flèches, Entrée pour valider, Échap"]:
+            ligne(texte, x, y)
+            y += 26
+
+        y = titre("Terrains", x, y + 20)
+        for terrain, texte in [(Road(), "Route : traction et grip élevés"),
+                               (Herbe(), "Herbe : plus faibles que la route"),
+                               (Terre(), "Terre : plus faibles que l'herbe"),
+                               (Glace(), "Glace : traction et grip très faibles"),
+                               (Vide(), "Vide : réapparition au dernier checkpoint")]:
+            case = pygame.Rect(x, y, icone, icone)
+            pygame.draw.rect(self.screen, terrain.color, case)
+            pygame.draw.rect(self.screen, COLOR_PANEL_BORDER, case, 1)
+            ligne(texte, x + icone + 12, y + 2)
+            y += 32
+
+        y = titre("Autres", x, y + 20)
+        for texte in [f"Aspiration : suivre l'adversaire, vitesse max x{ASPIRATION_BONUS}",
+                      "Collisions : les voitures rebondissent",
+                      "Course : 3 tours, checkpoints dans l'ordre",
+                      "Un seul objet à la fois par joueur"]:
+            ligne(texte, x, y)
+            y += 26
+
+        x = WINDOW_WIDTH // 2 + 28
+        y = titre("Cases spéciales", x, 90)
+        for lettre, texte in [("B", "Boost : vitesse +3"),
+                              ("?", "Bloc cadeau : donne un objet au hasard"),
+                              ("C", "Checkpoint : à franchir dans l'ordre"),
+                              ("L", "Ligne d'arrivée : valide un tour"),
+                              ("1", "Départ du joueur 1 (ou 2)")]:
+            case = pygame.Rect(x, y, icone, icone)
+            pygame.draw.rect(self.screen, couleur_route, case)
+            self._texte_centre(lettre, self.font_petite, (255, 255, 255), *case.center)
+            ligne(texte, x + icone + 12, y + 2)
+            y += 32
+
+        y = titre("Objets", x, y + 20)
+        for nom, texte in [("Champignon", "Champignon : vitesse +2"),
+                           ("Banane", "Banane : posée derrière, fait déraper"),
+                           ("Bombe", "Bombe : explose après 3 s ou au contact"),
+                           ("Etoile", "Étoile : invincible pendant 10 s"),
+                           ("Carapace", "Carapace bleue : vise l'adversaire")]:
+            centre = (x + icone // 2, y + icone // 2)
+            if nom == "Banane":
+                pygame.draw.circle(self.screen, (255, 220, 0), centre, 8)
+            elif nom == "Bombe":
+                pygame.draw.circle(self.screen, (220, 40, 40), centre, 10)
+                pygame.draw.circle(self.screen, (0, 0, 0), centre, 10, 2)
+            ligne(texte, x + icone + 12, y + 2)
+            y += 32
+
+        self._texte_centre("Échap : retour au menu", self.font_petite, COLOR_PANEL_BORDER,
+                           cx, WINDOW_HEIGHT - 25)
