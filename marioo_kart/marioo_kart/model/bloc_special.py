@@ -72,7 +72,7 @@ class Objet:
 
         self.nom = nom
 
-    def utiliser(self, voiture):
+    def utiliser(self, voiture, model):
         """Définit l'utilisation de l'objet par une voiture.
         
         Args :
@@ -92,16 +92,15 @@ class Champignon(Objet):
         Args:
             voiture (Car): voiture qui utilise le champignon
         """
-        voiture.speed = min(voiture.speed + 2,voiture.stats.max_speed)
-        voiture.vx = voiture.speed * math.cos(voiture.heading)
-        voiture.vy = voiture.speed * math.sin(voiture.heading)
+
+        voiture.effet_champignon(poussee=2.0, duree=1.5)
+        print(f"{voiture.stats.name} utilise un champignon !")
 
 class Banane(Objet):
     """Classe représentant une banane qui fait déraper une voiture."""
 
     def __init__(self):
         super().__init__("Banane")
-
     def utiliser(self, voiture,model):
         """Permettra de déposer une banane sur le circuit.
                 

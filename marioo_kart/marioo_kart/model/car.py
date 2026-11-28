@@ -1,5 +1,5 @@
 import pygame
-import math
+import math, time
 from constants import (
     CAR_ACCELERATION, CAR_WIDTH, CAR_HEIGHT, TILE_SIZE,
     ASPIRATION_LONGUEUR, ASPIRATION_LARGEUR
@@ -23,6 +23,11 @@ DRIFT_SEUIL_ENTREE = 1.0     # plus c'est haut, plus il est dur de déraper
 DRIFT_SEUIL_SORTIE = 0.5     # doit rester plus petit que le seuil d'entrée
 DRIFT_FACTEUR_GRIP = 0.2     # part du grip conservée pendant un dérapage
 FROTTEMENT = 0.1             # intensité du ralentissement quand on n'accélère pas
+#constantes d'objets
+BOOOST_CHAMPIGNON = 1.4           # bonus de vitesse du champignon
+GLISSADE_BANANE = 1.5                 # facteur de glissade d'une voiture sur une banane
+ROTATION_BANANE = math.radians(12)  # rotation de la voiture sur une banane
+
 
 class Car:
     
@@ -50,6 +55,12 @@ class Car:
                                       decalage=-(CAR_HEIGHT + ASPIRATION_LONGUEUR) / 2)
         self.en_aspiration: bool = False   # True si la voiture suit une autre de près
 
+        #objet actif : champignon, banane, etc.
+        self.champignon: bool = False  # True si la voiture est boostée par un champignon
+        self.banane: bool = False      # True si la voiture est sur une banane
+
+
+
         self.sprite = self.build_sprite()
 
     def accelerate(self) -> None:
@@ -68,6 +79,12 @@ class Car:
         """
         Mets a jour la position de la voiture en fonction du terrain et de ses actions.
         """
+        # Gestion de la glissade sur une banane
+        if self.banane_actif():
+            self.accelerated = 0
+            self.steering = 0
+            self.heading += ROTATION_BANANE
+
         # Mise à jour de la vitesse en fonction de l'accélération et du freinage
         ratio_vitesse = self.speed / self.stats.max_speed
         self.heading += self.steering * math.radians(self.stats.turn_speed) * ratio_vitesse
@@ -91,12 +108,22 @@ class Car:
                 v_long = min(0, v_long + ralentissement)
         vitesse_max = self.stats.max_speed
         if self.en_aspiration:
-            vitesse_max = self.stats.max_speed * ASPIRATION_BONUS
-        v_long = max(-self.stats.max_speed / 4, min(v_long, vitesse_max))
+            vitesse_max *= ASPIRATION_BONUS
+        if self.champignon_actif():
+            vitesse_max *= BOOOST_CHAMPIGNON
+
+        # Au-dessus de la vitesse max (fin du champignon) : on ralentit progressivement
+        if v_long > vitesse_max:
+            v_long = max(vitesse_max, v_long - self.stats.brake_power * 0.5)
+        v_long = max(-self.stats.max_speed / 4, v_long)
 
         # Gestion du dérapage
         demande = abs(v_lat)
-        if not self.drifting and demande > terrain.grip * DRIFT_SEUIL_ENTREE:
+        #cas de la banane : on force le dérapage
+        if self.banane_actif():
+            self.drifting = True   # sur une banane, les pneus n'accrochent plus
+        #sinon drift normal
+        elif not self.drifting and demande > terrain.grip * DRIFT_SEUIL_ENTREE:
             self.drifting = True
         elif self.drifting and demande < terrain.grip * DRIFT_SEUIL_SORTIE:
             self.drifting = False
@@ -120,6 +147,46 @@ class Car:
         self.accelerated = 0.0  
         self.steering = 0.0
 
+#---------------------------------------------------------------------------------------------------------
+#fonctions pour les objets
+    def effet_champignon(self, poussee: float, duree: float) -> None:
+        """Applique un boost de vitesse à la voiture pendant une durée donnée.
+        
+        Args:
+            pousse (float): Facteur de boost à appliquer à la vitesse.
+            duree (float): Durée du boost en secondes.
+        """
+        self.vx += poussee * math.cos(self.heading)
+        self.vy += poussee * math.sin(self.heading)
+        self.champignon = time.monotonic() + duree  # Temps auquel le boost se termine
+        
+    def champignon_actif(self) -> bool:
+        """Vérifie si la voiture est actuellement boostée par un champignon.
+        
+        Returns:
+            bool: True si la voiture est boostée, False sinon.
+        """
+        return self.champignon and time.monotonic() < self.champignon
+
+    
+    def banane_glisser(self, duree : float) -> None:
+        """Applique un effet de glissade à la voiture pendant une durée donnée.
+        
+        Args:
+            duree (float): Durée de la glissade en secondes.
+        """
+        self.fin_glissade = time.monotonic() + duree
+        self.vx *= 0.6
+        self.vy *= 0.6
+
+    def banane_actif(self) -> bool:
+        """Vérifie si la voiture est actuellement affectée par une banane.
+        
+        Returns:
+            bool: True si la voiture glisse sur une banane, False sinon.
+        """
+        return self.banane and time.monotonic() < self.banane
+#---------------------------------------------------------------------------------------------------------
     def build_sprite(self) -> pygame.Surface:
         """Dessine la voiture vue de dessus, l'avant tourné vers la droite,
         avec un dessin différent selon la voiture que le joueur a choisi."""
@@ -330,9 +397,9 @@ class Car:
 
 
 #exemples de voitures avec leurs stats
-SPORTS = CarStats("Sports", (220, 30, 30), acceleration=0.10, max_speed=5.0, brake_power=0.5, turn_speed=4.0, forme="sport")
+SPORTS = CarStats("Sports", (220, 30, 30), acceleration=0.10, max_speed=4.0, brake_power=0.5, turn_speed=4.0, forme="sport")
 CAMION  = CarStats("Camion",  (40, 90, 200), acceleration=0.1, max_speed=3.0,  brake_power=0.3, turn_speed=2.0, forme="camion")
-BIKE = CarStats("Bike", (30, 220, 30), acceleration=0.2, max_speed=6.0, brake_power=0.4, turn_speed=5.0, forme="bike")
-FORMULE1 = CarStats("Formule 1", (255, 255, 0), acceleration=0.15, max_speed=7.0, brake_power=0.6, turn_speed=6.0, forme="formule1")
-POLICE = CarStats("Police", (0, 0, 0), acceleration=0.12, max_speed=5.5, brake_power=0.5, turn_speed=4.5, forme="police")
+BIKE = CarStats("Bike", (30, 220, 30), acceleration=0.2, max_speed=4.0, brake_power=0.4, turn_speed=5.0, forme="bike")
+FORMULE1 = CarStats("Formule 1", (255, 255, 0), acceleration=0.15, max_speed=5.0, brake_power=0.6, turn_speed=6.0, forme="formule1")
+POLICE = CarStats("Police", (0, 0, 0), acceleration=0.12, max_speed=3.5, brake_power=0.5, turn_speed=4.5, forme="police")
 CARS = [SPORTS, CAMION, BIKE, FORMULE1, POLICE]

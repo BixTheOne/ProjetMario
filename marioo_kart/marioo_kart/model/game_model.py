@@ -14,6 +14,7 @@ import math
 import time
 from constants import COULEURS_JOUEURS
 
+rayon_banane = 20
 
 class GameModel:
 
@@ -235,6 +236,7 @@ class GameModel:
         self.choix_voiture[joueur] = (self.choix_voiture[joueur] + direction) % len(CARS)
 
     def valider_voiture(self, joueur: int) -> None:
+        """Valide la voiture choisie par le joueur."""
         self.joueur_pret[joueur] = True
 
     def tous_prets(self) -> bool:
@@ -311,3 +313,4 @@ class GameModel:
                 del self.temps_etoiles[voiture]
                 print("L'invincibilité de la voiture est terminée")
                  
+    
